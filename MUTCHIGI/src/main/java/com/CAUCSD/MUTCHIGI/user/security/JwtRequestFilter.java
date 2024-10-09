@@ -1,4 +1,4 @@
-package com.CAUCSD.MUTCHIGI.user.config;
+package com.CAUCSD.MUTCHIGI.user.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

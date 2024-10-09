@@ -25,13 +25,21 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.postgresql:postgresql:42.7.3'
 
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+
+	implementation 'com.google.code.gson:gson'
+	implementation 'com.google.api-client:google-api-client:1.32.1' // 구글 API 클라이언트
+	implementation 'com.google.oauth-client:google-oauth-client:1.32.1' // OAuth 클라이언트
+	implementation 'com.google.api-client:google-api-client-gson:1.32.1' // Gson 지원
 
 
 	compileOnly 'org.projectlombok:lombok'
@@ -40,10 +48,6 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
-
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 }
 
 tasks.named('test') {

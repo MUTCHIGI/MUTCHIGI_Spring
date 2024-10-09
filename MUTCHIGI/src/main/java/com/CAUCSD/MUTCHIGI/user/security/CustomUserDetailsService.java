@@ -1,4 +1,4 @@
-package com.CAUCSD.MUTCHIGI.user;
+package com.CAUCSD.MUTCHIGI.user.security;
 
 
 import org.springframework.security.core.userdetails.UserDetails;

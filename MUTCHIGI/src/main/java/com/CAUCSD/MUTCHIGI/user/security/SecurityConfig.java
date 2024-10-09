@@ -1,4 +1,4 @@
-package com.CAUCSD.MUTCHIGI.user.config;
+package com.CAUCSD.MUTCHIGI.user.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
