@@ -32,7 +32,7 @@ public class UserEntity {
    // private int providerId;
 
     @ManyToOne // Provider와의 관계 설정
-    @JoinColumn(name = "provider_id", referencedColumnName = "id", insertable = false, updatable = false) // 외래 키 설정
+    @JoinColumn(name = "provider_id", referencedColumnName = "id") // 외래 키 설정
     private Provider provider; // Provider 객체 추가
 
 }

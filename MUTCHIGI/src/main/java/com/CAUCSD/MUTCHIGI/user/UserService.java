@@ -26,6 +26,9 @@ public class UserService {
             userEntity.setRole(MemberRole.Normal);
 
             Provider provider = providerRepository.findById(userDTO.getProviderId()).orElse(null);
+            if (provider == null) {
+                throw new IllegalArgumentException("Provider not found for ID: " + userDTO.getProviderId());
+            }
             userEntity.setProvider(provider);
 
             return userRepository.save(userEntity);
