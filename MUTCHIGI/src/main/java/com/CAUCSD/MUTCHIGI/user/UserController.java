@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/google")
+    @Operation(summary = "Google 토큰으로 계정 정보 얻기", description = "구글 로그인을 통해 얻은 토큰(JWT)를 따옴표 없이 입력하여 계정 정보를 얻는 API입니다.")
     public ResponseEntity<Map<String, Object>> loginGoogle(@RequestBody String idGoogleToken){
         try{
 
@@ -44,9 +46,10 @@ public class UserController {
 
                 UserDTO userDTO = new UserDTO();
                 userDTO.setEmail(payload.getEmail());
+                userDTO.setPlatformUserId((String) payload.get("sub"));
                 userDTO.setName((String) payload.get("name"));
                 userDTO.setProfileImageURL((String) payload.get("picture"));
-                userDTO.setProvider_id(1);
+                userDTO.setProviderId(1);
 
                 UserEntity registeredUser = userService.registerUser(userDTO);
 
@@ -57,7 +60,9 @@ public class UserController {
                 responseBody.put("token", jwt);
                 responseBody.put("userId", registeredUser.getUserId());
                 responseBody.put("email", registeredUser.getEmail());
+                responseBody.put("name", registeredUser.getName());
                 responseBody.put("ProfileImageURL", registeredUser.getProfileImageURL());
+                responseBody.put("providerName", registeredUser.getProvider().getProviderName());
 
                 return ResponseEntity.ok(responseBody);
             }else{

@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.user;
 
+import com.CAUCSD.MUTCHIGI.user.provider.Provider;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,10 +8,10 @@ import lombok.Setter;
 @Setter
 public class UserDTO {
 
-    private String platform_user_id;
+    private String platformUserId;
     private String email;
     private String name;
     private String profileImageURL;
-    private int provider_id;
+    private long providerId;
 
 }

@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.user;
 
+import com.CAUCSD.MUTCHIGI.user.provider.Provider;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,10 @@ public class UserEntity {
     private MemberRole role;
 
     // provider : google이 들어감
-    private int providerId;
+   // private int providerId;
+
+    @ManyToOne // Provider와의 관계 설정
+    @JoinColumn(name = "provider_id", referencedColumnName = "id", insertable = false, updatable = false) // 외래 키 설정
+    private Provider provider; // Provider 객체 추가
 
 }
