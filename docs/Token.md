@@ -23,11 +23,25 @@
 2. Authorization탭으로 들어갑니다. (Params 다음 탭)
 3. Type을 OAuth2로 설정합니다.
 4. Configure Token부터 다음과 같이 작성합니다.
-   Token Name : 아무거나 작성
-   Callback URL : http://localhost:8080/login/oauth2/code/google (Google Cloud Console의 리다이렉트 URL입니다.)
-   Auth URL : https://accounts.google.com/o/oauth2/auth
-   Acecess Token URL : https://oauth2.googleapis.com/token
-   Client ID : application.properties의 spring.security.oauth2.client.registration.google.client-id 값
-   Client Secret : application.properties의 spring.security.oauth2.client.registration.google.client-secret 값
-   Scope : email profile
-   Client Authentication : Send as Basic Auth Header 선택
+   - Token Name : 아무거나 작성
+   - Callback URL : http://localhost:8080/login/oauth2/code/google (Google Cloud Console의 리다이렉트 URL입니다.)
+   - Auth URL : https://accounts.google.com/o/oauth2/auth
+   - Acecess Token URL : https://oauth2.googleapis.com/token
+   - Client ID : application.properties의 spring.security.oauth2.client.registration.google.client-id 값
+   - Client Secret : application.properties의 spring.security.oauth2.client.registration.google.client-secret 값
+   - Scope : email profile
+   - Client Authentication : Send as Basic Auth Header 선택
+5. Get New Access Token 버튼 클릭
+6. Google 로그인 과정 진행
+7. 발급 완료
+
+> 발급이 완료되면 Google에서 만료 기한이 10분인 JWT를 발급해줍니다.
+> <p> 여기서 id_token으로 Google 계정 정보를 얻어올 수 있습니다.
+
+### 4. 구글 계정 정보 받아오기 APi에 적용
+> domain "/auth/google" 위치에 POST로 보내고 있는 API에 위에서 받은 id_token 값을 입력합니다.
+
+- 주의 할 점은 RequestBody에 따옴표 같은 요소는 모두 지우고 id_token을 그대로 복사/붙여넣기 해야합니다.
+
+그러면 지금 (10월 10일) 기준으로 DB에 저장된 userId, email(google), 프로필사진URL, Spring 인증용 Token이 반환됩니다.
+- 자세한 사항은 swagger-ui docs 파일을 참고하세요.
