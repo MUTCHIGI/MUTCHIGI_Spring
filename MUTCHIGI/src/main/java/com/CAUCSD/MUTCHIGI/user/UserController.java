@@ -57,6 +57,7 @@ public class UserController {
                 responseBody.put("token", jwt);
                 responseBody.put("userId", registeredUser.getUserId());
                 responseBody.put("email", registeredUser.getEmail());
+                responseBody.put("ProfileImageURL", registeredUser.getProfileImageURL());
 
                 return ResponseEntity.ok(responseBody);
             }else{

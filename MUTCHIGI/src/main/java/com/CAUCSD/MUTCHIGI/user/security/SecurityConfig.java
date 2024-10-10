@@ -29,6 +29,7 @@ public class SecurityConfig{
                         .requestMatchers("/oauth2/authorization/google/**").permitAll()
                         .requestMatchers( "/login/oauth2/code/google/**").permitAll()
                         .requestMatchers( "/login/success").permitAll()
+                        .requestMatchers( "/auth/google").permitAll()
                         .requestMatchers("/swagger-ui/index.html/**", "/v3/api-docs/**", "/swagger-ui/**", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll() // 정적 리소스 허용
                         .anyRequest().authenticated()
