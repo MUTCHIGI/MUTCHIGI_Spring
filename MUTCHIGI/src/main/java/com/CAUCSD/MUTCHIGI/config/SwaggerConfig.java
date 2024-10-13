@@ -1,4 +1,4 @@
-package com.CAUCSD.MUTCHIGI.user.config;
+package com.CAUCSD.MUTCHIGI.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -21,7 +21,7 @@ public class SwaggerConfig {
     public GroupedOpenApi groupedOpenApi() {
         return GroupedOpenApi.builder()
                 .group("user-api")
-                .pathsToMatch("/auth/**")
+                .pathsToMatch("/**")
                 .build();
     }
 }
