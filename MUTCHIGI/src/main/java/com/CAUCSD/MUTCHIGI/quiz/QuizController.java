@@ -17,6 +17,8 @@ public class QuizController {
 
     @Autowired
     private QuizService quizService;
+    @Autowired
+    private QuizRepository quizRepository;
 
     @GetMapping("/idList")
     @Operation(summary = "/home 계층 ID 리스트만 요청", description = "퀴즈 ID List만 제공하는 API입니다. 기본 분류는 날짜 내림차순입니다.")
@@ -34,16 +36,16 @@ public class QuizController {
         return ResponseEntity.ok(quizIDList);
     }
 
-    @GetMapping("/List")
-    public  ResponseEntity<List<QuizEntity>> getQuizList(
-            @RequestParam List<Long> quizIds
+    @GetMapping("/Entity")
+    public  ResponseEntity<QuizEntity> getQuizList(
+            @RequestParam long quizId
     ){
         try {
-            List<QuizEntity> quizEntities = quizService.getQuizzesByIds(quizIds);
-            if(quizEntities.isEmpty()){
+            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+            if(quizEntity == null){
                 return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).build();
             }
-            return ResponseEntity.ok(quizEntities);
+            return ResponseEntity.ok(quizEntity);
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
