@@ -24,5 +24,7 @@ public class SongEntity {
 
     private String playURL;
 
+    private LocalTime songTime;
+
     private String thumbnailURL;
 }

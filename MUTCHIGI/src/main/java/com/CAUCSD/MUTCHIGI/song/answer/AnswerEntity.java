@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.song.answer;
 
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.song.SongEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,10 +16,10 @@ public class AnswerEntity {
     private long answerId;
 
     @ManyToOne
-    @JoinColumn(name = "songID", referencedColumnName = "songId")
-    private SongEntity song;
+    @JoinColumn(name = "qsSongRealtionId", referencedColumnName = "QSRelationId")
+    private QuizSongRelation quizSongRelation;
 
     private String answer;
 
-    private boolean isLLMUsed;
+    private boolean LLMUsed;
 }

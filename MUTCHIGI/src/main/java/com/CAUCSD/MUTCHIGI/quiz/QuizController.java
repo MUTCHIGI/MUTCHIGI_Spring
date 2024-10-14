@@ -52,7 +52,7 @@ public class QuizController {
     }
     
     @PostMapping(value = "/createQuiz")
-    @Operation(summary = "quiz 업로드(image 제외)")
+    @Operation(summary = "quiz 만들기")
     public ResponseEntity<Long> createQuiz(
             @RequestBody QuizDTO quizDTO
             ){
@@ -65,7 +65,7 @@ public class QuizController {
     }
 
     @PostMapping(value = "/createQuiz/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "quiz 만들기")
+    @Operation(summary = "quiz 업로드(image 제외)")
     public ResponseEntity<Long> createQuizImage(
             @RequestParam("image") MultipartFile image,
             @RequestParam("quizId") long quizId

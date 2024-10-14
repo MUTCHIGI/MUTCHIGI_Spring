@@ -1,12 +1,10 @@
 package com.CAUCSD.MUTCHIGI.song;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
-@Getter
-@Setter
+@Data
 public class YoutubeSongDTO {
 
     private long songId;
@@ -15,7 +13,8 @@ public class YoutubeSongDTO {
     private String singerName;
     private String playURL;
     private String thumbnailURL;
+    private LocalTime songTime;
 
-    private LocalTime startTime;
+    private long quizSongRelationID;
 
 }
