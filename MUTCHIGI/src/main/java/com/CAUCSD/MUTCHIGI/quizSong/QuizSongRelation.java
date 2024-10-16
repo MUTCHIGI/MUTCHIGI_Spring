@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 @Entity
@@ -23,4 +25,6 @@ public class QuizSongRelation {
     @ManyToOne
     @JoinColumn(name = "songId", referencedColumnName = "songId")
     private SongEntity songEntity;
+
+    private LocalTime startTime;
 }

@@ -1,8 +1,8 @@
-package com.CAUCSD.MUTCHIGI.quiz;
+package com.CAUCSD.MUTCHIGI.quiz.hint;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface QuizRepository extends JpaRepository<QuizEntity, Long> {
+public interface HintRepository extends JpaRepository<HintEntity,Long> {
 }

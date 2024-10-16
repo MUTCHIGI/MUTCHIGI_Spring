@@ -18,13 +18,13 @@ public class SongEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long songId;
 
+    private String songPlatformId;
+
     private String songName;
 
-    private LocalTime startTime;
-
-    private long singerId;
-
     private String playURL;
+
+    private LocalTime songTime;
 
     private String thumbnailURL;
 }

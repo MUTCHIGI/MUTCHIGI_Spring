@@ -1,6 +1,7 @@
 package com.CAUCSD.MUTCHIGI.quiz.hint;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.song.SongEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,12 +19,8 @@ public class HintEntity {
     private long hintId;
 
     @ManyToOne
-    @JoinColumn(name = "quizID", referencedColumnName = "quizId")
-    private QuizEntity quizEntity;
-
-    @ManyToOne
-    @JoinColumn(name = "songID", referencedColumnName = "songId")
-    private SongEntity songEntity;
+    @JoinColumn(name = "qsSongRealtionId", referencedColumnName = "QSRelationId")
+    private QuizSongRelation quizSongRelation;
 
     private LocalTime hintTime;
 

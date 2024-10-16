@@ -1,11 +1,9 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Schema(description = "퀴즈 데이터 전송 객체")
 public class QuizDTO {
     @Schema(description = "퀴즈 이름")
