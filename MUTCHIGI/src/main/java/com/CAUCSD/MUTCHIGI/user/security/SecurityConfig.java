@@ -1,5 +1,7 @@
 package com.CAUCSD.MUTCHIGI.user.security;
 
+import com.CAUCSD.MUTCHIGI.user.UserRepository;
+import com.CAUCSD.MUTCHIGI.user.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,11 +17,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig{
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
+    private UserRepository userRepository;
+    private UserService userService;
 
-    public SecurityConfig(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+
+    public SecurityConfig(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService, UserRepository userRepository, UserService userService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Bean
@@ -30,13 +37,13 @@ public class SecurityConfig{
                         .requestMatchers( "/login/oauth2/code/google/**").permitAll()
                         .requestMatchers( "/login/success").permitAll()
                         .requestMatchers( "/auth/google").permitAll()
-                        .requestMatchers("/swagger-ui/index.html/**", "/v3/api-docs/**", "/swagger-ui/**", "/error").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll() // 정적 리소스 허용
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // JWT를 사용하는 경우 상태 비저장
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT를 사용하는 경우 상태 비저장
                 ).oauth2Login(oauth2 -> oauth2 // OAuth2 로그인 설정
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorization") // 기본 URI 설정
@@ -44,6 +51,7 @@ public class SecurityConfig{
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/login/oauth2/code/*") // 리디렉션 URI 설정
                         )
+                        .successHandler(new OAuth2LoginSuccessHandler(jwtUtil, userRepository, userService))
                 )
                 .addFilterBefore(new JwtRequestFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가;
 

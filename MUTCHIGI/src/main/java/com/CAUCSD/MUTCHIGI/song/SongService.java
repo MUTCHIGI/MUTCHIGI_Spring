@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.sql.Time;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,11 +93,12 @@ public class SongService {
         return idList;
     }
 
-    public LocalTime saveStartTime(LocalTime startTime, long qsRelationId){
+    public LocalTime saveStartTime(TimeDTO timeDTO, long qsRelationId){
         QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
         if(quizSongRelation == null){
             return null;
         }
+        LocalTime startTime = LocalTime.of(timeDTO.getHour(), timeDTO.getMinute(), timeDTO.getSecond());
         quizSongRelation.setStartTime(startTime);
         quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
 

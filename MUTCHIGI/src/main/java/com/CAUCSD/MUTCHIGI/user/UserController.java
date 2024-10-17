@@ -53,11 +53,11 @@ public class UserController {
 
                 UserEntity registeredUser = userService.registerUser(userDTO);
 
-                String jwt = jwtUtil.generateToken(registeredUser.getEmail());
+                //String jwt = jwtUtil.generateToken(registeredUser.getPlatformUserId());
 
                 Map<String, Object> responseBody = new HashMap<>();
 
-                responseBody.put("token", jwt);
+                //responseBody.put("token", jwt);
                 responseBody.put("userId", registeredUser.getUserId());
                 responseBody.put("email", registeredUser.getEmail());
                 responseBody.put("name", registeredUser.getName());
