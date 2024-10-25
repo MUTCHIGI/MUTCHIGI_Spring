@@ -1,9 +1,6 @@
 package com.CAUCSD.MUTCHIGI.user.security;
 
-import com.CAUCSD.MUTCHIGI.user.UserDTO;
-import com.CAUCSD.MUTCHIGI.user.UserEntity;
-import com.CAUCSD.MUTCHIGI.user.UserRepository;
-import com.CAUCSD.MUTCHIGI.user.UserService;
+import com.CAUCSD.MUTCHIGI.user.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +54,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             newUserDTO.setProviderId(extinguishUser.getProvider().getId());
         }
 
-        String token = jwtUtil.generateToken(authentication.getName());
+        String token = jwtUtil.generateToken(authentication.getName(), MemberRole.Normal);
 
         System.out.println("name : " + newUserDTO.getName());
 
