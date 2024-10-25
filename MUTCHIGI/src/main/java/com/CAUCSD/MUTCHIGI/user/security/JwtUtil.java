@@ -1,12 +1,16 @@
 package com.CAUCSD.MUTCHIGI.user.security;
 
+import com.CAUCSD.MUTCHIGI.user.MemberRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
 import java.security.Key;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,11 +18,15 @@ public class JwtUtil {
     private final Key SECRET_KEY = Keys.hmacShaKeyFor("sadfsadfasgadfsgfdsgsdgsdfsdafdsfgdasfgdsffgfsdgsfdgdsgsdfgdsgsdfgsdfgsdg".getBytes());
 
     // JWT 생성
-    public String generateToken(String username) {
+    public String generateToken(String username, MemberRole memberRole) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", memberRole.name()); // 단일 역할을 리스트로 감싸기
+
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 6시간
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10시간
                 .signWith(SECRET_KEY)
                 .compact();
     }
@@ -37,7 +45,7 @@ public class JwtUtil {
     }
 
     // JWT의 모든 클레임 추출
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
@@ -46,9 +54,16 @@ public class JwtUtil {
     }
 
     // 토큰 만료 여부 확인
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
 
         return extractAllClaims(token)
                 .getExpiration().before(new Date());
     }
+
+    public List<GrantedAuthority> getAuthoritiesFromClaims(Claims claims) {
+        System.out.println("내부 claim" +claims);
+        String role = claims.get("roles", String.class); // "roles" 클레임에서 단일 역할 추출
+        return Collections.singletonList(new SimpleGrantedAuthority(role)); // 단일 역할을 GrantedAuthority로 변환하여 리스트로 감싸기
+    }
+
 }
