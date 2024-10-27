@@ -30,10 +30,6 @@ public class RoomEntity {
     private LocalDate roomReleaseDate;
 
     @ManyToOne
-    @JoinColumn(name = "SuperUserInRoomId", referencedColumnName = "userId")
-    private UserEntity user;
-
-    @ManyToOne
     @JoinColumn(name = "quizReferencingId", referencedColumnName = "quizId")
     private QuizEntity quiz;
 }

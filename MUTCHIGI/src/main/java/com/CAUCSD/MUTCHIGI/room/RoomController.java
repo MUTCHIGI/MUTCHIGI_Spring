@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.room;
 
+import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,4 +69,24 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/userList")
+    @Operation(summary = "멀티플레이 플레이 환경에서 유저에 대한 정보를 불러오는 API")
+    public ResponseEntity<List<UserEntity>> getUserList(
+            @RequestParam long roomId
+    ){
+        return ResponseEntity
+                .ok()
+                .body(roomService.getUserListFromDB(roomId));
+    }
+
+    @GetMapping("/superUser")
+    public ResponseEntity<Long> getSuperUserList(
+            @RequestParam long roomId
+    ){
+        return ResponseEntity
+                .ok(roomService.getSuperUserIDFromDB(roomId));
+    }
+
+    //강퇴기능 추후에 만들기
 }
