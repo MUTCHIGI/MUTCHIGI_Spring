@@ -21,13 +21,30 @@ public class QuizController {
     private QuizRepository quizRepository;
 
     @GetMapping("/idList")
-    @Operation(summary = "/home 계층 ID 리스트만 요청", description = "퀴즈 ID List만 제공하는 API입니다. 기본 분류는 날짜 내림차순입니다.")
+    @Operation(summary = "/home 계층 ID 리스트만 요청", description = """
+      퀴즈 ID List만 제공하는 API임.
+      page 기본 : 1 (1부터 시작함, 0 시작 X)
+      offset 기본 : 8 (페이지당 8 보여줌)
+      정렬 기본 : 날짜 최신순(DATEDS)
+            DATEAS(1, "dateAscending"),
+            DATEDS(2, "dateDescending"),
+            NAMEAS(3, "nameAscending"),
+            NAMEDS(4, "nameDescending"),
+            VIEWAS(5, "viewAscending"),
+            VIEWDS(6, "viewDescending");
+      quizTitle 기본 : ""(빈 String => 전체 조회가능)
+      modId 기본 : 0 (0 : 전체, 1 : 커스텀, 2 : 플레이리스트)
+      typeId 기본 : 0 (0 : 전체, 1 : 기본, 2 : 악기분리)
+    """)
     public ResponseEntity<List<Long>> getPageIDList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int offset,
-            @RequestParam(defaultValue = "DATEDS") QuizSort sort
+            @RequestParam(defaultValue = "DATEDS") QuizSort sort,
+            @RequestParam(defaultValue = "") String quizTitle,
+            @RequestParam(defaultValue = "0") int modId,
+            @RequestParam(defaultValue = "0") int typeId
     ){
-        List<Long> quizIDList = quizService.getQuizIDList(page-1, offset, sort);
+        List<Long> quizIDList = quizService.getQuizIDList(page-1, offset, typeId, modId, sort, quizTitle);
 
         if (quizIDList.isEmpty()) {
             return ResponseEntity.status(HttpStatus.SC_NO_CONTENT).build();
@@ -36,23 +53,29 @@ public class QuizController {
         return ResponseEntity.ok(quizIDList);
     }
 
-    @GetMapping("/Entity")
-    public  ResponseEntity<QuizEntity> getQuizList(
-            @RequestParam long quizId
+    @GetMapping("/Entities")
+    @Operation(summary = "전에 받은 idList를 RequsetParam에 담아서 보내주면 됩니다.")
+    public  ResponseEntity<List<QuizEntity>> getQuizEntities(
+            @RequestParam List<Long> idList
     ){
+        List<QuizEntity> quizEntities;
         try {
-            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
-            if(quizEntity == null){
+            quizEntities = quizRepository.findAllById(idList);
+            if(quizEntities.isEmpty()){
                 return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).build();
             }
-            return ResponseEntity.ok(quizEntity);
+            return ResponseEntity.ok(quizEntities);
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
     }
     
     @PostMapping(value = "/createQuiz")
-    @Operation(summary = "quiz 만들기")
+    @Operation(summary = "quiz 만들기", description = """
+            modId : 1(커스텀), 2(플레이리스트)
+            typeId : 1(기본), 2(악기 분리)
+            instrumentId : 0(typeId가 1이면), 1(보컬), 2(베이스), 3(반주), 4(드럼)
+            """)
     public ResponseEntity<Long> createQuiz(
             @RequestBody QuizDTO quizDTO
             ){
@@ -88,6 +111,4 @@ public class QuizController {
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
     }
-
-
 }

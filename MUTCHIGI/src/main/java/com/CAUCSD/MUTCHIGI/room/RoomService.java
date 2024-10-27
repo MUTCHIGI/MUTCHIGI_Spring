@@ -1,0 +1,65 @@
+package com.CAUCSD.MUTCHIGI.room;
+
+import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
+import com.CAUCSD.MUTCHIGI.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+public class RoomService {
+
+    @Autowired
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private QuizRepository quizRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public long createRoom(MakeRoomDTO makeRoomDTO) {
+        RoomEntity roomEntity = new RoomEntity();
+        roomEntity.setQuiz(quizRepository.findById(makeRoomDTO.getQuizId()).orElse(null));
+        roomEntity.setRoomName(makeRoomDTO.getRoomName());
+        roomEntity.setPublicRoom(makeRoomDTO.isPublicRoom());
+        roomEntity.setPassword(makeRoomDTO.getPassword());
+        roomEntity.setMaxPlayer(makeRoomDTO.getMaxPlayer());
+        roomEntity.setUser(userRepository.findById(makeRoomDTO.getUserId()).orElse(null));
+        roomEntity.setRoomReleaseDate(LocalDate.now());
+
+        roomEntity = roomRepository.save(roomEntity);
+
+        return roomEntity.getRoomId();
+    }
+
+    public List<Long> getRoomIDList(int page, int offset, int modId, int typeId, String quizTitle, boolean publicRoom) {
+        PageRequest pageRequest = PageRequest.of(page, offset, Sort.by("roomReleaseDate").descending());
+
+        Page<RoomEntity> roomEntities;
+
+        // modId와 typeId에 따라 조건 분기
+        if (modId == 0 && typeId == 0) {
+            // modId와 typeId가 모두 0인 경우
+            roomEntities = roomRepository.findByQuiz_QuizNameContainingAndPublicRoom(quizTitle, publicRoom, pageRequest);
+        } else if (modId == 0) {
+            // modId가 0이고 typeId가 있는 경우
+            roomEntities = roomRepository.findByQuiz_QuizNameContainingAndQuiz_TypeIdAndPublicRoom(quizTitle, typeId, publicRoom, pageRequest);
+        } else if (typeId == 0) {
+            // typeId가 0이고 modId가 있는 경우
+            roomEntities = roomRepository.findByQuiz_QuizNameContainingAndQuiz_ModIdAndPublicRoom(quizTitle, modId, publicRoom, pageRequest);
+        } else {
+            // modId와 typeId가 모두 있는 경우
+            roomEntities = roomRepository.findByQuiz_QuizNameContainingAndQuiz_ModIdAndQuiz_TypeIdAndPublicRoom(quizTitle, modId, typeId, publicRoom, pageRequest);
+        }
+
+        return roomEntities.stream()
+                .map(RoomEntity::getRoomId)
+                .toList();
+    }
+}

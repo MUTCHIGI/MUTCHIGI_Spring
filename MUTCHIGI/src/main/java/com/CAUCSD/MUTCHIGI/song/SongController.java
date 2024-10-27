@@ -92,4 +92,14 @@ public class SongController {
                 .ok()
                 .body(songService.saveHintList(hintDTOList, qsRelationId));
     }
+
+    @PostMapping("youtube/myPlaylist")
+    public ResponseEntity<List<YoutubeSongDTO>> addMyPlaylistToQuiz(
+            @RequestBody MyPlayListQuizDTO myPlayListQuizDTO
+    ){
+        return ResponseEntity
+                .ok()
+                .body(songService.addMyPlayListToQuiz(myPlayListQuizDTO));
+
+    }
 }

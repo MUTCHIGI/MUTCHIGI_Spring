@@ -58,6 +58,8 @@ public class SongService {
 
     private String baseYoutubeURL = "https://www.googleapis.com/youtube/v3/videos";
 
+    private String baseYoutubeListURL = "https://www.googleapis.com/youtube/v3/playlistItems";
+
     public YoutubeSongDTO getYoutubeSong(String youtubeURL, long quizId) {
         String videoId = extractYoutubeVideoId(youtubeURL);
         if (videoId == null) {
@@ -68,7 +70,74 @@ public class SongService {
         RestTemplate restTemplate = new RestTemplate();
         String apiResponse = restTemplate.getForObject(apiURL, String.class);
 
-        return mapToYoutubeSong(apiResponse, quizId);
+        // API 응답을 JsonNode로 파싱
+        try {
+            JsonNode rootNode = new ObjectMapper().readTree(apiResponse);
+            JsonNode itemNode = rootNode.path("items").get(0); // 첫 번째 항목 가져오기
+
+            if (itemNode == null) {
+                return null;
+            }
+
+            // itemNode를 mapToYoutubeSong 메소드에 전달
+            return mapToYoutubeSong(itemNode, quizId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<YoutubeSongDTO> addMyPlayListToQuiz(MyPlayListQuizDTO myPlayListQuizDTO){
+        String playListId = extractPlaylistId(myPlayListQuizDTO.getMyPlayListURL());
+        if(playListId == null){
+            return new ArrayList<>();
+        }
+
+        List<String> videoIds = new ArrayList<>();
+        String nextPageToken = null;
+
+        do{
+            String apiURL = String.format("%s?playlistId=%s&key=%s&part=snippet&maxResults=50&pageToken=%s"
+                    , baseYoutubeListURL, playListId, youtubeAPIKey, nextPageToken != null ? nextPageToken : "");
+
+            RestTemplate restTemplate = new RestTemplate();
+            String apiResponse = restTemplate.getForObject(apiURL, String.class);
+            //System.out.println("플리 api 응답 : "+apiResponse);
+
+            videoIds.addAll(extractVideoIdInListResponse(apiResponse));
+            //System.out.println("비디오 ID : "+ videoIds);
+
+            nextPageToken = extractNextPageToken(apiResponse);
+
+            // 다음 페이지 토큰이 null이거나 빈 문자열이면 루프 종료
+            if (nextPageToken == null || nextPageToken.isEmpty()) {
+                break;
+            }
+        }while (true);
+
+        List<YoutubeSongDTO> songs = new ArrayList<>();
+        for(String videoId : videoIds){
+            String apiURL = String.format("%s?id=%s&key=%s&part=snippet,contentDetails", baseYoutubeURL, videoId, youtubeAPIKey);
+            RestTemplate restTemplate = new RestTemplate();
+            String apiResponse = restTemplate.getForObject(apiURL, String.class);
+            // API 응답을 JsonNode로 파싱
+            try {
+                JsonNode rootNode = new ObjectMapper().readTree(apiResponse);
+                JsonNode itemNode = rootNode.path("items").get(0); // 첫 번째 항목 가져오기
+
+                if (itemNode == null) {
+                    return null;
+                }
+
+                // itemNode를 mapToYoutubeSong 메소드에 전달
+                songs.add(mapToYoutubeSong(itemNode, myPlayListQuizDTO.getQuizId()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        }
+        return songs;
     }
 
     public List<Long> saveYoutubeAnswer(List<String> answerList, long qsRelationId){
@@ -130,6 +199,9 @@ public class SongService {
         return hintIdList;
     }
 
+
+
+
     private String extractYoutubeVideoId(String youtubeURL) {
         String regex = "(?<=v=|/|be/)([a-zA-Z0-9_-]{11})";
         Pattern pattern = Pattern.compile(regex);
@@ -137,15 +209,60 @@ public class SongService {
         return matcher.find() ? matcher.group(0) : null;
     }
 
-    private YoutubeSongDTO mapToYoutubeSong(String apiResponse, long quizId) {
+    private String extractPlaylistId(String playlistUrl) {
+        String regex = "(?<=list=|/)([a-zA-Z0-9_-]{34})";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(playlistUrl);
+        return matcher.find() ? matcher.group(0) : null;
+    }
+
+    /*
+    private List<YoutubeSongDTO> mapToYoutubeSongs(String apiResponse, long quizId){
+        List<YoutubeSongDTO> mappedSongs = new ArrayList<>();
+
         try {
             JsonNode rootNode = new ObjectMapper().readTree(apiResponse);
-            JsonNode itemNode = rootNode.path("items").get(0);
+            JsonNode items = rootNode.get("items");
 
-            if(itemNode == null) {
-                return null;
+            for(JsonNode item : items){
+                YoutubeSongDTO youtubeSongDTO = mapToYoutubeSong(item, quizId);
+                if(youtubeSongDTO != null){
+                    mappedSongs.add(youtubeSongDTO);
+                }
+                System.out.println("각각 : "+youtubeSongDTO);
             }
 
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return mappedSongs;
+    }
+
+     */
+
+    private List<String> extractVideoIdInListResponse(String apiResponse) {
+        List<String> videoIdList = new ArrayList<>();
+        try {
+            JsonNode rootNode = new ObjectMapper().readTree(apiResponse);
+            JsonNode itemNodes = rootNode.path("items");
+
+            if(itemNodes != null && itemNodes.isArray()){
+                for(JsonNode itemNode : itemNodes){
+                    String videoId = itemNode.path("snippet").path("resourceId").path("videoId").asText();
+                    if(!videoId.isEmpty()){
+                        videoIdList.add(videoId);
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return videoIdList;
+    }
+
+    private YoutubeSongDTO mapToYoutubeSong(JsonNode itemNode, long quizId) {
+        try {
             //기존에 가수 있는 경우 처리 완료
             SingerEntity singerEntity;
             String singerName = itemNode.path("snippet").path("channelTitle").asText();
@@ -220,7 +337,7 @@ public class SongService {
     }
 
     private LocalTime durationToLocalTime(String duration) {
-        System.out.println("테스트입니다 : " + duration);
+        //System.out.println("테스트입니다 : " + duration);
 
         String time = duration.replace("PT", "")
                 .replace("H",":")
@@ -243,6 +360,16 @@ public class SongService {
                 startTime = LocalTime.of(0,0,Integer.parseInt(parts[0]));
         }
         return startTime;
+    }
+
+    private String extractNextPageToken(String apiResponse) {
+        try {
+            JsonNode rootNode = new ObjectMapper().readTree(apiResponse);
+            return rootNode.path("nextPageToken").asText(null);  // null을 기본값으로 설정
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;  // 파싱 중 오류 발생 시 null 반환
+        }
     }
 
 

@@ -28,7 +28,7 @@ public class QuizService {
     // 임시로 상대경로로 폴더 위치 지정
     private final String thumbnailDir = "C:\\thumbnailURL";
 
-    public List<Long> getQuizIDList(int page, int offset, QuizSort sort){
+    public List<Long> getQuizIDList(int page, int offset, int typeId, int modId, QuizSort sort, String quizTitle){
         PageRequest pageRequest = switch (sort) {
             case DATEAS -> PageRequest.of(page, offset, Sort.by("releaseDate").ascending());
             case DATEDS -> PageRequest.of(page, offset, Sort.by("releaseDate").descending());
@@ -38,7 +38,20 @@ public class QuizService {
             case VIEWDS -> PageRequest.of(page, offset, Sort.by("userPlayCount").descending());
         };
 
-        Page<QuizEntity> quizEntities = quizRepository.findAll(pageRequest);
+        Page<QuizEntity> quizEntities;
+
+        //전체 조회
+        // 조회 조건에 따라 적절한 메소드 호출
+        if (modId == 0 && typeId == 0) {
+            quizEntities = quizRepository.findByQuizNameContaining(quizTitle, pageRequest);
+        } else if (modId == 0) {
+            quizEntities = quizRepository.findByQuizNameContainingAndTypeId(quizTitle, typeId, pageRequest);
+        } else if (typeId == 0) {
+            quizEntities = quizRepository.findByQuizNameContainingAndModId(quizTitle, modId, pageRequest);
+        } else {
+            quizEntities = quizRepository.findByQuizNameContainingAndTypeIdAndModId(quizTitle, typeId, modId, pageRequest);
+        }
+
         return quizEntities.stream()
                 .map(QuizEntity::getQuizId)
                 .toList();
@@ -67,6 +80,13 @@ public class QuizService {
                 quizDTO.getMinute(),
                 quizDTO.getSecond()
         );
+
+        if(!(quizDTO.getModId() == 1 || quizDTO.getModId() == 2)){
+            throw new EntityNotFoundException("Mod id is not 1 or 2");
+        }
+        if(!(quizDTO.getTypeId()==1 || quizDTO.getTypeId()==2)){
+            throw new EntityNotFoundException("Type id is not 1 or 2");
+        }
 
         quizEntity.setSongCount(0);
         quizEntity.setQuizName(quizDTO.getQuizName());
@@ -119,5 +139,7 @@ public class QuizService {
 
         return fileName;
     }
+
+
 
 }

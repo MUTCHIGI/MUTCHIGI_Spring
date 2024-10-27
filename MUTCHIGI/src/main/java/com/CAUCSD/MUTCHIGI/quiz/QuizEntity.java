@@ -34,7 +34,7 @@ public class QuizEntity {
     // 몇 명의 유저가 플레이 했는가?
 
     private int typeId;
-    // Giant인지 Degualt인지
+    // 기본, 악기분리
 
     private int modId;
     // 커스텀, 나만의 플레이리스트 등등
