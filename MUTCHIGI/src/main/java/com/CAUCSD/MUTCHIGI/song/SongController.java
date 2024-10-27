@@ -39,6 +39,39 @@ public class SongController {
                 );
     }
 
+    @PostMapping("/youtube/myPlaylist")
+    @Operation(summary = "나만의 플레이리스트를 Quiz의 노래로 변환하는 API")
+    public ResponseEntity<List<YoutubeSongDTO>> addMyPlaylistToQuiz(
+            @RequestBody MyPlayListQuizDTO myPlayListQuizDTO
+    ) {
+        return ResponseEntity
+                .ok()
+                .body(songService.addMyPlayListToQuiz(myPlayListQuizDTO));
+    }
+
+    @GetMapping("/youtube/songList")
+    public ResponseEntity<List<YoutubeSongDTO>> getYoutubeSongList(
+            @RequestParam long quizId
+    ){
+        return ResponseEntity
+                .ok()
+                .body(songService.getYoutubeSongDTOList(quizId));
+    }
+
+    @DeleteMapping("/youtube/{qsRelationId}/delSong")
+    @Operation(summary = "해당 퀴즈에 대한 노래(유튜브 영상)을 삭제하는 API", description =
+            """
+                    퀴즈-노래 사이의 관련성(qsRelation)만 삭제한다. 즉, 노래 정보나 가수 정보는 그대로 DB에 남아있어서 재활용이 가능하다.
+                    실제로 qsRelation만 삭제하고 같은 노래 URL을 넣으면 동일하기에 노래 DB에 있던 id를 그대로 반환한다.
+                    """)
+    public ResponseEntity<Void> deleteYoutubeSong(
+            @PathVariable long qsRelationId
+    ){
+        return ResponseEntity
+                .ok()
+                .body(songService.deleteYoutubeSongDB(qsRelationId));
+    }
+
     @PostMapping("/youtube/{qsRelationId}/settings")
     @Operation(summary = "유튜브 영상 퀴즈에 대한 정답, 시작시간, 힌트를 한꺼번에 세팅하는 API")
     public ResponseEntity<Void> setYoutubeSetting(
@@ -103,26 +136,5 @@ public class SongController {
     }
 
 
-    @PostMapping("youtube/myPlaylist")
-    public ResponseEntity<List<YoutubeSongDTO>> addMyPlaylistToQuiz(
-            @RequestBody MyPlayListQuizDTO myPlayListQuizDTO
-    ) {
-        return ResponseEntity
-                .ok()
-                .body(songService.addMyPlayListToQuiz(myPlayListQuizDTO));
-    }
 
-    @DeleteMapping("/youtube/{qsRelationId}/delSong")
-    @Operation(summary = "해당 퀴즈에 대한 노래(유튜브 영상)을 삭제하는 API", description =
-            """
-                    퀴즈-노래 사이의 관련성(qsRelation)만 삭제한다. 즉, 노래 정보나 가수 정보는 그대로 DB에 남아있어서 재활용이 가능하다.
-                    실제로 qsRelation만 삭제하고 같은 노래 URL을 넣으면 동일하기에 노래 DB에 있던 id를 그대로 반환한다.
-                    """)
-    public ResponseEntity<Void> deleteYoutubeSong(
-            @PathVariable long qsRelationId
-    ){
-        return ResponseEntity
-                .ok()
-                .body(songService.deleteYoutubeSongDB(qsRelationId));
-    }
 }

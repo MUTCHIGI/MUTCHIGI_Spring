@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface QuizSongRelationReopository extends JpaRepository<QuizSongRelation, Long> {
     QuizSongRelation findByQuizEntity_QuizIdAndSongEntity_SongId(Long quizId, Long songId);
+    List<QuizSongRelation> findByQuizEntity_QuizId(Long quizId);
 }

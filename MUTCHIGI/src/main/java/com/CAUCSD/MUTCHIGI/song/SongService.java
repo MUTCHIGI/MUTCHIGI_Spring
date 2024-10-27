@@ -216,6 +216,23 @@ public class SongService {
         }
     }
 
+    public List<YoutubeSongDTO> getYoutubeSongDTOList(long quizId){
+        List<QuizSongRelation> quizSongRelations = quizSongRelationRepository.findByQuizEntity_QuizId(quizId);
+
+        List<YoutubeSongDTO> youtubeSongDTOList = new ArrayList<>();
+
+        for(QuizSongRelation quizSongRelation : quizSongRelations){
+            SongEntity songEntity = quizSongRelation.getSongEntity();
+            SingerSongRelation singerSongRelation = singerSongRelationRepository.findBySong(songEntity);
+            SingerEntity singerEntity = singerSongRelation.getSinger();
+            if(songEntity != null){
+                youtubeSongDTOList.add(getYoutubeSongDTO(songEntity, singerEntity, quizSongRelation));
+            }
+        }
+
+        return youtubeSongDTOList;
+    }
+
     private String extractYoutubeVideoId(String youtubeURL) {
         String regex = "(?<=v=|/|be/)([a-zA-Z0-9_-]{11})";
         Pattern pattern = Pattern.compile(regex);
