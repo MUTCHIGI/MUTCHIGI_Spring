@@ -16,8 +16,11 @@ import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -200,7 +203,18 @@ public class SongService {
     }
 
 
+    public Void deleteYoutubeSongDB(long qsRelationId){
+        quizSongRelationRepository.deleteById(qsRelationId);
 
+        // 삭제 후 확인
+        if (!quizSongRelationRepository.existsById(qsRelationId)) {
+            return null;
+            // 삭제가 성공적으로 이루어졌음
+        } else {
+            throw new EntityNotFoundException("ID가 " + qsRelationId + "인 항목을 찾을 수 없습니다.");
+            // 삭제에 실패했거나 항목이 존재하지 않음
+        }
+    }
 
     private String extractYoutubeVideoId(String youtubeURL) {
         String regex = "(?<=v=|/|be/)([a-zA-Z0-9_-]{11})";
@@ -371,6 +385,8 @@ public class SongService {
             return null;  // 파싱 중 오류 발생 시 null 반환
         }
     }
+
+
 
 
 }
