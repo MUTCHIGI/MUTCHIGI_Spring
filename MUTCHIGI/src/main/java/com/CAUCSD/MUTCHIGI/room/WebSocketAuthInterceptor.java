@@ -2,6 +2,7 @@ package com.CAUCSD.MUTCHIGI.room;
 
 import com.CAUCSD.MUTCHIGI.user.security.JwtUtil;
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -20,15 +21,17 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
 
+    @Autowired
     public WebSocketAuthInterceptor (JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
+
     }
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(message);
 
-        System.out.println("여기는 진입하는가?"+headerAccessor);
+        //System.out.println("여기는 진입하는가?"+headerAccessor);
         if (StompCommand.CONNECT.equals(headerAccessor.getCommand())) {
             String token = headerAccessor.getFirstNativeHeader("Authorization");
 
@@ -38,11 +41,13 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                 if (auth != null) {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                     headerAccessor.setUser(auth); // 인증된 사용자 설정
+
                 } else {
                     throw new RuntimeException("Unauthorized");
                 }
             }
         }
+        System.out.println(message);
         return message;
     }
 
