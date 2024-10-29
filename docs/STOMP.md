@@ -1,11 +1,12 @@
 # 다음은 STOMP 통신방식을 지정해둔 문서입니다.
-stompTest폴더의 테스트용 HTML을 참고하면 좋습니다.
+- **stompTest폴더의 테스트용 HTML을 참고**하면 좋습니다.
+- **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
+
 <br/>
 
-
 ## 구독해야 하는 domain
- '/topic/' + roomId => 메인 채팅
- '/userDisconnect/{userId}/queue/errors' => 개인 유저에게 오류 알림 및 DISCONNECT용
+- '/topic/' + roomId => 메인 채팅
+- '/userDisconnect/{userId}/queue/errors' => 개인 유저에게 오류 알림 및 DISCONNECT용
  
 <br/>
 
@@ -24,6 +25,8 @@ stompTest폴더의 테스트용 HTML을 참고하면 좋습니다.
   roomPassword : password(String)
 }
 ```
+- Return 구독 domain : '/topic/' + roomId
+- Return 메시지 : 단순 시스템 메세지
 
 <br/>
 
@@ -39,6 +42,8 @@ stompTest폴더의 테스트용 HTML을 참고하면 좋습니다.
   roomPassword : password(String)
 }
 ```
+- Return 구독 domain : '/topic/' + roomId
+- Return 메시지 : 단순 시스템 메세지
 
 <br/>
 
