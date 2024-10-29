@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>STOMP.js Group Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #messageContainer {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>STOMP.js Group Chat Application</h1>
+    
+    <label for="jwtToken">JWT 토큰 입력:</label>
+    <input type="text" id="jwtToken" placeholder="JWT 토큰을 입력하세요" />
+    <label for="chatRoom">채팅 방 입력:</label>
+    <input type="number" id="chatRoom" placeholder="채팅 방 ID" />
+    <button id="connectButton">연결하기</button>
+
+    <div id="messageContainer"></div>
+
+    <input type="text" id="messageInput" placeholder="메시지를 입력하세요" />
+    <button id="sendButton">전송</button>
+
+    <script>
+        let stompClient = null;
+
+        document.getElementById('connectButton').onclick = function() {
+            const jwt_token = document.getElementById('jwtToken').value; // 입력받은 JWT 토큰
+            const chatRoomId = Number(document.getElementById('chatRoom').value); // 채팅 방 ID
+
+            const socket = new SockJS('http://localhost:8080/room'); // WebSocket URL
+            stompClient = Stomp.over(socket); // STOMP 클라이언트 생성
+
+            stompClient.connect(
+                {
+                    'Authorization': 'Bearer ' + jwt_token, // JWT 토큰 설정
+                },
+                (frame) => {
+                    subscribe(chatRoomId); // 연결 후 채팅 방에 구독
+                    console.log("connected: " + frame);
+
+                    // 구독 성공 후 채팅방 ID 전송
+                    console.log("chatRoomId before sending:", chatRoomId, typeof chatRoomId); // 로그 추가
+
+                    const message = {
+                        roomId: chatRoomId, 
+                        userId : 1,
+                        roomPassword : 'qweqwe'
+                    }
+                    stompClient.send('/app/joinRoom/' + chatRoomId, {}, JSON.stringify(message));
+                },
+                (error) => {
+                    console.error("Connection error: " + error);
+                }
+            );
+        };
+
+        // 구독 함수
+        function subscribe(roomId) {
+            stompClient.subscribe('/topic/' + roomId, (message) => {
+                displayMessage(JSON.parse(message.body)); // 수신한 메시지 표시
+            });
+
+            // 오류 메시지 수신 구독
+            stompClient.subscribe('/userDisconnect/'+ 1 +'/queue/errors', (message) => {
+                console.log("Received error message:", message.body);
+                alert(message.body);
+            
+                if (message.body === "INVALID_PASSWORD") {
+                    alert("비밀번호가 틀렸습니다. 연결을 종료합니다.");
+                    stompClient.disconnect(); // STOMP 연결 종료s
+                }
+                if (message.body === "ROOM_NOT_FOUND") {
+                    alert("해당 방이 존재하지 않습니다. 연결을 종료합니다.");
+                    stompClient.disconnect(); // STOMP 연결 종료s
+                }
+            });
+        }
+
+        // 메시지 전송
+        document.getElementById('sendButton').onclick = function() {
+            const messageText = document.getElementById('messageInput').value; // 입력된 메시지
+            const chatRoomId = document.getElementById('chatRoom').value; // 채팅 방 ID
+            if (messageText && stompClient) {
+                const ChatEntity = {
+                    userName: "홍길동", // 필드 이름을 userName으로 설정
+                    chatMessage: messageText // 필드 이름을 chatMessage으로 설정
+                };
+                stompClient.send('/app/send/' + chatRoomId, {}, JSON.stringify(ChatEntity)); // 채팅 방 ID에 따라 메시지 전송
+                console.log(JSON.stringify(ChatEntity));
+                document.getElementById('messageInput').value = ''; // 입력 필드 초기화
+            }
+        };
+
+        // 수신한 메시지 표시 함수
+        function displayMessage(message) {
+            const messageContainer = document.getElementById('messageContainer');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = `${message.userName}: ${message.chatMessage}`; // 메시지 표시
+            messageContainer.appendChild(messageElement);
+            messageContainer.scrollTop = messageContainer.scrollHeight; // 스크롤을 맨 아래로
+        }
+    </script>
+</body>
+</html>
