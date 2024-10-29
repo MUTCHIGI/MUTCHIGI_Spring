@@ -9,8 +9,6 @@ import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,42 +30,42 @@ public class MusicChatService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public ChatEntity joinRoomChat(JoinMember joinMember) {
-        String errorDestination = "/userDisconnect/" + joinMember.getUserId() + "/queue/errors";
+    public SendChatDTO joinRoomChat(JoinMemberDTO joinMemberDTO) {
+        String errorDestination = "/userDisconnect/" + joinMemberDTO.getUserId() + "/queue/errors";
         System.out.println(errorDestination);
 
-        RoomEntity roomEntity = roomRepository.findById(joinMember.getRoomId()).orElse(null);
+        RoomEntity roomEntity = roomRepository.findById(joinMemberDTO.getRoomId()).orElse(null);
         if (roomEntity == null) {
             System.out.println("Room not found");
             messagingTemplate.convertAndSend(errorDestination, "ROOM_NOT_FOUND");
             return null;
         }
         if(!roomEntity.isPublicRoom()){ // 비공개방인 경우
-            if(!roomEntity.getPassword().equals(joinMember.getRoomPassword())) { // 비밀번호 대조해보고 다르면
-                System.out.println("Password does not match" + joinMember.getRoomPassword() + "is not Equals " + roomEntity.getPassword());
+            if(!roomEntity.getPassword().equals(joinMemberDTO.getRoomPassword())) { // 비밀번호 대조해보고 다르면
+                System.out.println("Password does not match" + joinMemberDTO.getRoomPassword() + "is not Equals " + roomEntity.getPassword());
                 messagingTemplate.convertAndSend(errorDestination, "INVALID_PASSWORD");
                 return null;
             }
         }
 
-        ChatEntity chatEntity = new ChatEntity();
-        chatEntity.setUserName("[System]");
+        SendChatDTO sendChatDTO = new SendChatDTO();
+        sendChatDTO.setUserName("[System]");
 
-        UserEntity userEntity = userRepository.findById(joinMember.getUserId()).orElse(null);
+        UserEntity userEntity = userRepository.findById(joinMemberDTO.getUserId()).orElse(null);
         if(userEntity == null){
-            chatEntity.setUserName("[Warning]");
-            chatEntity.setChatMessage("저장되지 않은 User의 입장입니다.");
+            sendChatDTO.setUserName("[Warning]");
+            sendChatDTO.setChatMessage("저장되지 않은 User의 입장입니다.");
         }else{
-            if(memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(joinMember.getRoomId(), joinMember.getUserId()).isEmpty()){
+            if(memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(joinMemberDTO.getRoomId(), joinMemberDTO.getUserId()).isEmpty()){
                 MemberEntity memberEntity = new MemberEntity();
                 memberEntity.setUserEntity(userEntity);
-                memberEntity.setRoomEntity(roomRepository.findById(joinMember.getRoomId()).orElse(null));
-                if(memberRepository.findByRoomEntity_RoomId(joinMember.getRoomId()).isEmpty()){
+                memberEntity.setRoomEntity(roomRepository.findById(joinMemberDTO.getRoomId()).orElse(null));
+                if(memberRepository.findByRoomEntity_RoomId(joinMemberDTO.getRoomId()).isEmpty()){
                     memberEntity.setRoomAuthority(RoomAuthority.FIRST); // 방에 아무도 없으면 방장으로 임명
-                    chatEntity.setChatMessage(userEntity.getName()+"님이 방장으로 " + joinMember.getRoomId() + "번 방에 들어왔습니다.");
+                    sendChatDTO.setChatMessage(userEntity.getName()+"님이 방장으로 " + joinMemberDTO.getRoomId() + "번 방에 들어왔습니다.");
                 }else{
                     memberEntity.setRoomAuthority(RoomAuthority.SECONDARY);
-                    chatEntity.setChatMessage(userEntity.getName()+"님이 " + joinMember.getRoomId() + "번 방에 들어왔습니다.");
+                    sendChatDTO.setChatMessage(userEntity.getName()+"님이 " + joinMemberDTO.getRoomId() + "번 방에 들어왔습니다.");
                 }
 
                 memberRepository.save(memberEntity);
@@ -75,10 +73,25 @@ public class MusicChatService {
                 
 
             }else{
-                chatEntity.setUserName("[Warning]");
-                chatEntity.setChatMessage("이미 존재하는 User의 입장입니다.");
+                sendChatDTO.setUserName("[Warning]");
+                sendChatDTO.setChatMessage("이미 존재하는 User의 입장입니다.");
             }
         }
-        return chatEntity;
+        return sendChatDTO;
+    }
+
+    public SendChatDTO setMessageChat(ReceiveChatDTO receiveChatDTO){
+        UserEntity userEntity = userRepository.findById(receiveChatDTO.getUserId()).orElse(null);
+        String errorDestination = "/userDisconnect/" + receiveChatDTO.getUserId() + "/queue/errors";
+
+        if(userEntity == null) {
+            messagingTemplate.convertAndSend(errorDestination, "USET_NOT_FOUND");
+            return null;
+        }
+        SendChatDTO sendChatDTO = new SendChatDTO();
+        sendChatDTO.setUserName(userEntity.getName());
+        sendChatDTO.setChatMessage(receiveChatDTO.getChatMessage());
+
+        return sendChatDTO;
     }
 }

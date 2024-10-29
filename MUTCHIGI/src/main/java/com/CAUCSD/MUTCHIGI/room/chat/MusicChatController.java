@@ -2,6 +2,7 @@ package com.CAUCSD.MUTCHIGI.room.chat;
 
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
+import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -27,21 +28,19 @@ public class MusicChatController {
 
     @MessageMapping("/joinRoom/{chatRoomId}")
     @SendTo("/topic/{chatRoomId}")
-    public ChatEntity joinRoom(@DestinationVariable long chatRoomId, @Payload JoinMember joinMember) {
+    public SendChatDTO joinRoom(@DestinationVariable long chatRoomId, @Payload JoinMemberDTO joinMemberDTO) {
         // chatMessage에서 roomId를 가져와서 필요한 처리 수행
-        System.out.println("User joined room: " + joinMember.getRoomId());
+        System.out.println("User joined room: " + joinMemberDTO.getRoomId());
 
-        return musicChatService.joinRoomChat(joinMember);
+        return musicChatService.joinRoomChat(joinMemberDTO);
     }
 
 
     @MessageMapping("/send/{chatRoomId}")
     @SendTo("/topic/{chatRoomId}")
-    public ChatEntity setMessage(@DestinationVariable long chatRoomId, @Payload ChatEntity chatEntity) {
-        System.out.println(chatEntity.getChatMessage());
-        ChatEntity chatEntity1 = new ChatEntity();
-        chatEntity1.setUserName("System");
-        chatEntity1.setChatMessage("확인용입니다." + chatRoomId);
-        return chatEntity1;
+    public SendChatDTO setMessage(@DestinationVariable long chatRoomId, @Payload ReceiveChatDTO receiveChatDTO) {
+        System.out.println(receiveChatDTO.getChatMessage());
+        return musicChatService.setMessageChat(receiveChatDTO);
+
     }
 }
