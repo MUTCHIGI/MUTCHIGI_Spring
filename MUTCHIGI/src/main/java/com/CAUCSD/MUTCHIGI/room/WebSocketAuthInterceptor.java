@@ -46,6 +46,7 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                     throw new RuntimeException("Unauthorized");
                 }
             }
+
         }
         System.out.println(message);
         return message;

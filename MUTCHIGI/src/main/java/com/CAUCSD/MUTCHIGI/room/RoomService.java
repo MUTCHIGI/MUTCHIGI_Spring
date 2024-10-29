@@ -33,7 +33,7 @@ public class RoomService {
 
     public long createRoom(MakeRoomDTO makeRoomDTO) {
         RoomEntity roomEntity = new RoomEntity();
-        MemberEntity memberEntity = new MemberEntity();
+
         roomEntity.setQuiz(quizRepository.findById(makeRoomDTO.getQuizId()).orElse(null));
         roomEntity.setRoomName(makeRoomDTO.getRoomName());
         roomEntity.setPublicRoom(makeRoomDTO.isPublicRoom());
@@ -43,10 +43,6 @@ public class RoomService {
 
         roomEntity = roomRepository.save(roomEntity);
 
-        memberEntity.setUserEntity(userRepository.findById(makeRoomDTO.getUserId()).orElse(null));
-        memberEntity.setRoomAuthority(RoomAuthority.FIRST);
-
-        memberEntity = memberRepository.save(memberEntity);
 
         return roomEntity.getRoomId();
     }

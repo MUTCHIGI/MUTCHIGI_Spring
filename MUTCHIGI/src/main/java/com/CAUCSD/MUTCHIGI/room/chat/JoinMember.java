@@ -5,7 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ChatMember {
+public class JoinMember {
     private long roomId;
     private long userId;
+    private String roomPassword;
 }
