@@ -21,7 +21,7 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : UserId(long),
+  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
@@ -38,7 +38,7 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : UserId(long),
+  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
@@ -46,6 +46,25 @@
 - Return 메시지 : 단순 시스템 메세지
 
 <br/>
+
+## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
+보내는 것과 받는 것의 JSON 차이가 있음.
+- 보내는 메세지
+```
+'/app/send/' + chatRoomId 의 Send JSON 형식
+{
+  userId: chatUserId(long), << 그냥 UserId랑 같음.
+  chatMessage: messageText(String)
+}
+```
+- 받는 메세지
+```
+{
+  userName: userName(String),
+  chatMessage: messageText(String)
+}
+```
+
 
 # 오류 구독 '/userDisconnect/{userId}/queue/errors'시 받는 메세지
 ## 1, 2 공통
