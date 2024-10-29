@@ -1,6 +1,7 @@
 # 다음은 STOMP 통신방식을 지정해둔 문서입니다.
 - **stompTest폴더의 테스트용 HTML을 참고**하면 좋습니다.
 - **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
+**- 현재 구현은 1,2번, 3번(일부)만 되어 있습니다.**
 
 <br/>
 
@@ -49,21 +50,138 @@
 
 ## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
 보내는 것과 받는 것의 JSON 차이가 있음.
+
+### 3-1. 채팅 보내기 받기 (qsRelationId == -1)
+**qsRelationId는** 해당 퀴즈의 노래에 대한 Id인데 해당 노래를 맞추는 상황이 아님을 **qsRelationId == -1**임으로 명시한다.
 - 보내는 메세지
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
 {
   userId: chatUserId(long), << 그냥 UserId랑 같음.
-  chatMessage: messageText(String)
+  chatMessage: messageText(String),
+  qsRelationId : qsRelationId(long) << -1
 }
 ```
-- 받는 메세지
+- 받는 메세지(qsRelationId == -1 인 경우 다음은 STOMP 통신방식을 지정해둔 문서입니다.
+- **stompTest폴더의 테스트용 HTML을 참고**하면 좋습니다.
+- **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
+
+<br/>
+
+## 구독해야 하는 domain
+- '/topic/' + roomId => 메인 채팅
+- '/userDisconnect/{userId}/queue/errors' => 개인 유저에게 오류 알림 및 DISCONNECT용
+ 
+<br/>
+
+## 1. 방 만들기(/app/joinRoom/' + chatRoomId)
+
+> 1) 'http://localhost:8080/room/create' 로 방을 만듬 => chatRoomId(방 id)를 반환받음
+> 2) 'http://localhost:8080/room/'** + chatRoomId 로 STOMP 연결
+> 3) 연결 직후 이제는 stompClient의 domain임. **'/app/joinRoom/' + chatRoomId** 로 아래 JSON 형식 보냄
+   - **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
+   - 방 만들고 나서 해당 방의 Member에 포함되지 않으면 자동으로 방장으로 지정해주기에 위의 로직을 무조건 따라야 함.
+```
+/app/joinRoom/' + chatRoomId 의 JSON 형식
+{
+  roomId: chatRoomId(long),
+  userId : chatUserId(long), << 그냥 UserId랑 같음.
+  roomPassword : password(String)
+}
+```
+- Return 구독 domain : '/topic/' + roomId
+- Return 메시지 : 단순 시스템 메세지
+
+<br/>
+
+## 2. 접속하기(/app/joinRoom/' + chatRoomId) << 방 만들기와 사실 동일함.
+> 아래는 모두 stompClient의 domain임.
+> 1) '/room/' + chatRoomId 로 STOMP 연결
+> 2) 연결 직후 '/app/joinRoom/' + chatRoomId 로 아래 JSON 형식 보냄
+```
+/app/joinRoom/' + chatRoomId 의 JSON 형식
+{
+  roomId: chatRoomId(long),
+  userId : chatUserId(long), << 그냥 UserId랑 같음.
+  roomPassword : password(String)
+}
+```
+- Return 구독 domain : '/topic/' + roomId
+- Return 메시지 : 단순 시스템 메세지
+
+<br/>
+
+## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
+보내는 것과 받는 것의 JSON 차이가 있음.
+채팅 == 정답 맞추기가 되므로 정답과 정답자에 대한 Message가 별도로 와야 한다.
+그래서 유저가 친 채팅 반환 및 정답체크에 대한 반환은 **비동기로** 처리된다.
+- 즉, 유저 채팅 -> 유저 채팅 반환 & 정답체크(정답일시에만) : 비동기로 처리
+
+### 3-1. 채팅 보내기 받기 (qsRelationId == -1)
+**qsRelationId는** 해당 퀴즈의 노래에 대한 Id인데 해당 노래를 맞추는 상황이 아님을 **qsRelationId == -1**임으로 명시한다.
+- 범위 : qsRelation이 -1 인 시기는 게임 시작 전, 정답자 나온 이후 ~ 다음 노래 시작 전
+- 보내는 메세지
+```
+'/app/send/' + chatRoomId 의 Send JSON 형식
+{
+  userId: chatUserId(long), << 그냥 UserId랑 같음.
+  chatMessage: messageText(String),
+  qsRelationId : qsRelationId(long) << -1
+}
+```
+- 받는 메세지(qsRelationId == -1 인 경우)
 ```
 {
   userName: userName(String),
   chatMessage: messageText(String)
 }
 ```
+
+### 3-2 정답 체크 (qsRelationId != -1)
+- 보내는 메세지(기존과 동일하다)
+```
+'/app/send/' + chatRoomId 의 Send JSON 형식
+{
+  userId: chatUserId(long), << 그냥 UserId랑 같음.
+  chatMessage: messageText(String),
+  qsRelationId : qsRelationId(long)
+}
+```
+- 받는 메세지 (단순 채팅 반환)
+```
+{
+  userName: userName(String),
+  chatMessage: messageText(String)
+}
+- 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.)
+```
+{
+  answerUserName : (String),
+  answerSong : (String),
+  answerSinger : (String)
+}
+```
+
+## 4. 문제(노래) 제공 (/app/getSong /' + chatRoomId + '/'+ songIndex) => 게임 시작도 포함되어 있음.
+- 간단하게 서버로 부터 문제(노래)를 제공받도록 요청하는 도메인이다.
+- songIndex는 서버에서 해당 Room이 가진 퀴즈의 노래 List중 몇 번째를 수행"할" 것인지를 포함한다.
+- **songIndex가 0**인 경우 **"게임 시작"**과 동일한 의미이며 **첫 번째 노래를 요청**하는 것과 동일한 의미다.
+   - songIndex가 5인 경우 6번째 노래를 요청하는 것과 동일한 의미다. 
+- "게임 시작"(songIndex == 0)의 경우에는 "방장"이 이 Domain을 호출한다.
+- 그 이후에는 5. Skip Vote기능과 연계하여 진행한다. (상세한 사항은 5번에 작성하였다.)
+- 보내는 메세지는 없다. Domain의 PathVariable에 포함된 값으로 파악하여 서버에서 계산한다.
+- 받는 메세지
+{
+  qsRelationId : (long),
+  SongURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
+  OriginalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
+  timeStamp : 00:00:00(String) << 노래 시작 시간이다.
+}
+
+## 5. Skip Vote
+
+## 6. 힌트제공(Server 자체에서 이벤트 처리로 제공할 예정임)
+
 
 
 # 오류 구독 '/userDisconnect/{userId}/queue/errors'시 받는 메세지
