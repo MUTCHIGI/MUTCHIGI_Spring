@@ -2,7 +2,7 @@
 - **stompTest폴더의 테스트용 HTML을 참고**하면 좋습니다.
 - **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
 **- 현재 구현은 1,2번, 3번(일부)만 되어 있습니다.**
-- 아래에서 전송하는 UserId 모두 Session에 JWT 저장해서 처리하는 방식 사용할 수도 있음(일단 UserId 제공하는 방식으로 준비하기)
+- UserId를 각 세션에 Attirbute로 저장하였음. Key 값 : user-id
 
 <br/>
 
@@ -23,12 +23,13 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
 - Return 구독 domain : '/topic/' + roomId
 - Return 메시지 : 단순 시스템 메세지
+
+- SimpSession에 "user-id"를 키로 한 userId값이 저장됨
 
 <br/>
 
@@ -40,12 +41,13 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
 - Return 구독 domain : '/topic/' + roomId
 - Return 메시지 : 단순 시스템 메세지
+
+- SimpSession에 "user-id"를 키로 한 userId값이 저장됨
 
 <br/>
 
@@ -58,7 +60,6 @@
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
 {
-  userId: chatUserId(long), << 그냥 UserId랑 같음.
   chatMessage: messageText(String),
   qsRelationId : qsRelationId(long) << -1
 }
@@ -86,7 +87,6 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
@@ -103,7 +103,6 @@
 /app/joinRoom/' + chatRoomId 의 JSON 형식
 {
   roomId: chatRoomId(long),
-  userId : chatUserId(long), << 그냥 UserId랑 같음.
   roomPassword : password(String)
 }
 ```
@@ -125,7 +124,6 @@
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
 {
-  userId: chatUserId(long), << 그냥 UserId랑 같음.
   chatMessage: messageText(String),
   qsRelationId : qsRelationId(long) << -1
 }
@@ -143,7 +141,6 @@
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
 {
-  userId: chatUserId(long), << 그냥 UserId랑 같음.
   chatMessage: messageText(String),
   qsRelationId : qsRelationId(long)
 }
