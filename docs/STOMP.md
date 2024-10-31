@@ -51,10 +51,10 @@
 
 <br/>
 
-## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
+## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)
 보내는 것과 받는 것의 JSON 차이가 있음.
 
-### 3-1. 채팅 보내기 받기 (qsRelationId == -1)
+### 3-1. 채팅 보내기 받기 (qsRelationId == -1) 구독 : ('/topic/' + roomId)
 **qsRelationId는** 해당 퀴즈의 노래에 대한 Id인데 해당 노래를 맞추는 상황이 아님을 **qsRelationId == -1**임으로 명시한다.
 - 보내는 메세지
 ```
@@ -70,7 +70,7 @@
 
 <br/>
 
-### 3-2 정답 체크 (qsRelationId != -1)
+### 3-2 정답 체크 (qsRelationId != -1) 구독 : ('/topic/' + roomId) & ('/topic/correct/' + roomId)
 - 보내는 메세지(기존과 동일하다)
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
@@ -79,14 +79,14 @@
   qsRelationId : qsRelationId(long)
 }
 ```
-- 받는 메세지 (단순 채팅 반환)
+- 받는 메세지 (단순 채팅 반환) >>('/topic/' + roomId)
 ```
 {
   userName: userName(String),
   chatMessage: messageText(String)
 }
 ```
-- 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.)
+- 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.) >> ('/topic/correct/' + roomId)
 
 ```
 {
@@ -103,14 +103,18 @@
    - songIndex가 5인 경우 6번째 노래를 요청하는 것과 동일한 의미다. 
 - "게임 시작"(songIndex == 0)의 경우에는 "방장"이 이 Domain을 호출한다.
 - 그 이후에는 5. Skip Vote기능과 연계하여 진행한다. (상세한 사항은 5번에 작성하였다.)
-- 보내는 메세지는 없다. Domain의 PathVariable에 포함된 값으로 파악하여 서버에서 계산한다.
+- **다음 노래를 미리 받아서 수행하는 경우 그냥 songIndex만 다음껄로 보내면 된다.**
+- 보내는 메세지는 없다.
 - 받는 메세지
+
+```
 {
   qsRelationId : (long),
-  SongURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
-  OriginalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
+  songURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
+  originalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
   timeStamp : 00:00:00(String) << 노래 시작 시간이다.
 }
+```
 
 ## 5. Skip Vote ('/app/skipVote/' + chatRoomId)
 - 해당 노래 문제를 Skip 투표를 하는 Domain으로 사전에 제공된 플레이어 숫자의 과반수가 되기 전까지 Vote한다.
