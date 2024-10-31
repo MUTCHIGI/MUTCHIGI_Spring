@@ -51,7 +51,7 @@
 
 <br/>
 
-## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
+## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)
 보내는 것과 받는 것의 JSON 차이가 있음.
 
 ### 3-1. 채팅 보내기 받기 (qsRelationId == -1) 구독 : ('/topic/' + roomId)
@@ -70,7 +70,7 @@
 
 <br/>
 
-### 3-2 정답 체크 (qsRelationId != -1) 구독 : ('/topic/correct/' + roomId)
+### 3-2 정답 체크 (qsRelationId != -1) 구독 : ('/topic/' + roomId) & ('/topic/correct/' + roomId)
 - 보내는 메세지(기존과 동일하다)
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
@@ -79,14 +79,14 @@
   qsRelationId : qsRelationId(long)
 }
 ```
-- 받는 메세지 (단순 채팅 반환)
+- 받는 메세지 (단순 채팅 반환) >>('/topic/' + roomId)
 ```
 {
   userName: userName(String),
   chatMessage: messageText(String)
 }
 ```
-- 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.)
+- 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.) >> ('/topic/correct/' + roomId)
 
 ```
 {
