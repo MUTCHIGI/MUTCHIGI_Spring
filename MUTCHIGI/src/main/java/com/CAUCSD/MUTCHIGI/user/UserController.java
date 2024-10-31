@@ -35,28 +35,21 @@ public class UserController {
 
     @PostMapping("/google")
     @Operation(summary = "Google 토큰으로 계정 정보 얻기", description = "구글 로그인을 통해 얻은 토큰(JWT)를 따옴표 없이 입력하여 계정 정보를 얻는 API입니다.")
-    public ResponseEntity<UserDTO> loginGoogle(@RequestBody String springToken){
+    public ResponseEntity<UserEntity> loginGoogle(@RequestBody String springToken){
         try{
             String username = jwtUtil.extractUsername(springToken);
             UserEntity userEntity = userRepository.findByPlatformUserId(username);
 
             if(springToken != null){
 
-                UserDTO userDTO = new UserDTO();
-                userDTO.setEmail(userEntity.getEmail());
-                userDTO.setPlatformUserId(username);
-                userDTO.setName(userEntity.getName());
-                userDTO.setProfileImageURL(userEntity.getProfileImageURL());
-                userDTO.setProviderId(userEntity.getProvider().getId());
-
-                return ResponseEntity.ok(userDTO);
+                return ResponseEntity.ok(userEntity);
             }
         }
         catch(Exception e){
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(new UserDTO());
+            return ResponseEntity.badRequest().body(new UserEntity());
         }
-        return ResponseEntity.internalServerError().body(new UserDTO());
+        return ResponseEntity.internalServerError().body(new UserEntity());
     }
 
 }
