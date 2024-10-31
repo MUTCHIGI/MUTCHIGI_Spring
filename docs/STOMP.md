@@ -54,7 +54,7 @@
 ## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
 보내는 것과 받는 것의 JSON 차이가 있음.
 
-### 3-1. 채팅 보내기 받기 (qsRelationId == -1)
+### 3-1. 채팅 보내기 받기 (qsRelationId == -1) 구독 : ('/topic/' + roomId)
 **qsRelationId는** 해당 퀴즈의 노래에 대한 Id인데 해당 노래를 맞추는 상황이 아님을 **qsRelationId == -1**임으로 명시한다.
 - 보내는 메세지
 ```
@@ -70,7 +70,7 @@
 
 <br/>
 
-### 3-2 정답 체크 (qsRelationId != -1)
+### 3-2 정답 체크 (qsRelationId != -1) 구독 : ('/topic/correct/' + roomId)
 - 보내는 메세지(기존과 동일하다)
 ```
 '/app/send/' + chatRoomId 의 Send JSON 형식
