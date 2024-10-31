@@ -47,6 +47,7 @@ public class RoomService {
         roomEntity.setPassword(makeRoomDTO.getPassword());
         roomEntity.setMaxPlayer(makeRoomDTO.getMaxPlayer());
         roomEntity.setRoomReleaseDate(LocalDate.now());
+        roomEntity.setParticipateAllowed(makeRoomDTO.isParticipateAllowed());
 
         roomEntity = roomRepository.save(roomEntity);
 
