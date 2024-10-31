@@ -105,12 +105,15 @@
 - 그 이후에는 5. Skip Vote기능과 연계하여 진행한다. (상세한 사항은 5번에 작성하였다.)
 - 보내는 메세지는 없다. Domain의 PathVariable에 포함된 값으로 파악하여 서버에서 계산한다.
 - 받는 메세지
+
+```
 {
   qsRelationId : (long),
   SongURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
   OriginalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
   timeStamp : 00:00:00(String) << 노래 시작 시간이다.
 }
+```
 
 ## 5. Skip Vote ('/app/skipVote/' + chatRoomId)
 - 해당 노래 문제를 Skip 투표를 하는 Domain으로 사전에 제공된 플레이어 숫자의 과반수가 되기 전까지 Vote한다.
