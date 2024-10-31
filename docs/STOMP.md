@@ -79,7 +79,7 @@
   qsRelationId : qsRelationId(long)
 }
 ```
-- 받는 메세지 (단순 채팅 반환) >>('/topic/' + roomId)
+- 받는 메세지 (단순 채팅 반환) >> ('/topic/' + roomId)
 ```
 {
   userName: userName(String),
@@ -107,7 +107,7 @@
 - 보내는 메세지는 없다.
 - 받는 메세지
 
-```
+``` 구독 : ('/topic/song/' + chatRoomId)
 {
   qsRelationId : (long),
   songURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
@@ -128,7 +128,7 @@
   voteNum : (int) <= 초기 숫자는 0이다.
 }
 ```
-- 받는 메세지
+- 받는 메세지 >> 구독 : ('/topic/vote/' + chatRoomId)
 ```
 {
   voteNum : (int)
@@ -138,7 +138,7 @@
 ## 6. 힌트제공(Server 자체에서 이벤트 처리로 제공할 예정임)
 - 서버 자체에서 문제를 제공할 당시에 미리 Event를 스케줄링해두고 이에 매핑시켜서 메시지로 전송할 계획이다.
 - 즉 이벤트로 발생하기 때문에 보내는 메세지는 없고 받기만 하면 된다.
-- 받는 메세지
+- 받는 메세지 >> 구독 : ('/topic/hint/' + chatRoomId)
 ```
 {
  hintNum : (int), // 몇 번째 힌트인가?
@@ -148,7 +148,8 @@
 ```
 
 ## 7. 연결 끊기
-- 이 부분은 아직 미확정(다 처리된 이후 마지막에 작성할 예정임)
+- 연결은 프론트단에서 DISCONNECT를 해도 연결이 끊기고 연결중인 탭을 끊어도 연결이 끊긴다.
+- 연결을 끊은 이후에 멤버 삭제, 방에 남은 인원이 없는 경우 방 삭제 같은 로직도 모두 구성을 완료 하였다.
 
 # 오류 구독 '/userDisconnect/{userId}/queue/errors'시 받는 메세지
 ## 1, 2 공통
