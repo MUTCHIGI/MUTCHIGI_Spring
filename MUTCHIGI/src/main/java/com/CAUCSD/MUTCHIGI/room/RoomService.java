@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.room;
 
+import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.RoomAuthority;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberEntity;
@@ -34,7 +35,13 @@ public class RoomService {
     public long createRoom(MakeRoomDTO makeRoomDTO) {
         RoomEntity roomEntity = new RoomEntity();
 
-        roomEntity.setQuiz(quizRepository.findById(makeRoomDTO.getQuizId()).orElse(null));
+        QuizEntity quizEntity = new QuizEntity();
+        quizEntity = quizRepository.findById(makeRoomDTO.getQuizId()).orElse(null);
+        if(quizEntity == null) {
+            return -1;
+        }
+
+        roomEntity.setQuiz(quizEntity);
         roomEntity.setRoomName(makeRoomDTO.getRoomName());
         roomEntity.setPublicRoom(makeRoomDTO.isPublicRoom());
         roomEntity.setPassword(makeRoomDTO.getPassword());

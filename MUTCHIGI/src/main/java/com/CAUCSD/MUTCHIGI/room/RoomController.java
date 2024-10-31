@@ -25,6 +25,9 @@ public class RoomController {
             @RequestBody MakeRoomDTO makeRoomDTO
     ){
         long roomId = roomService.createRoom(makeRoomDTO);
+        if(roomId == -1){
+            return ResponseEntity.noContent().build();
+        }
         return ResponseEntity.ok(roomId);
     }
 
