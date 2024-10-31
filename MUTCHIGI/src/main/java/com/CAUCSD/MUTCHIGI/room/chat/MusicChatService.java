@@ -208,6 +208,15 @@ public class MusicChatService {
         return sendNextSongDTO;
     }
 
+    public VoteDTO VoteToSkip (long chatRoomId, VoteDTO voteDTO){
+        if(voteDTO.getVoteNum() == -1)
+            voteDTO.setVoteNum(0);
+        else{
+            voteDTO.setVoteNum(voteDTO.getVoteNum() + 1);
+        }
+        return voteDTO;
+    }
+
     @Async
     public void sendCorrectAnswerMessage(long chatRoomId, ReceiveChatDTO receiveChatDTO){
         SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();

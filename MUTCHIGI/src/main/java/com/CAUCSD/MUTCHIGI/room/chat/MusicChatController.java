@@ -52,4 +52,13 @@ public class MusicChatController {
         System.out.println("songIndex : " + songIndex);
         return musicChatService.getNextSongAndStart(chatRoomId, songIndex);
     }
+
+    @MessageMapping("/skipVote/{chatRoomId}")
+    @SendTo("/topic/vote/{chatRoomId}")
+    public VoteDTO VoteSkip(
+            @DestinationVariable long chatRoomId,
+            @Payload VoteDTO voteDTO
+    ){
+        return musicChatService.VoteToSkip(chatRoomId,voteDTO);
+    }
 }
