@@ -70,72 +70,6 @@
 
 <br/>
 
-## 구독해야 하는 domain
-- '/topic/' + roomId => 메인 채팅
-- '/userDisconnect/{userId}/queue/errors' => 개인 유저에게 오류 알림 및 DISCONNECT용
- 
-<br/>
-
-## 1. 방 만들기(/app/joinRoom/' + chatRoomId)
-
-> 1) 'http://localhost:8080/room/create' 로 방을 만듬 => chatRoomId(방 id)를 반환받음
-> 2) 'http://localhost:8080/room/'** + chatRoomId 로 STOMP 연결
-> 3) 연결 직후 이제는 stompClient의 domain임. **'/app/joinRoom/' + chatRoomId** 로 아래 JSON 형식 보냄
-   - **<주의> : JSON Field명이 일치하지 않으면 전송도 안되고 받는 것도 안됨.**
-   - 방 만들고 나서 해당 방의 Member에 포함되지 않으면 자동으로 방장으로 지정해주기에 위의 로직을 무조건 따라야 함.
-```
-/app/joinRoom/' + chatRoomId 의 JSON 형식
-{
-  roomId: chatRoomId(long),
-  roomPassword : password(String)
-}
-```
-- Return 구독 domain : '/topic/' + roomId
-- Return 메시지 : 단순 시스템 메세지
-
-<br/>
-
-## 2. 접속하기(/app/joinRoom/' + chatRoomId) << 방 만들기와 사실 동일함.
-> 아래는 모두 stompClient의 domain임.
-> 1) '/room/' + chatRoomId 로 STOMP 연결
-> 2) 연결 직후 '/app/joinRoom/' + chatRoomId 로 아래 JSON 형식 보냄
-```
-/app/joinRoom/' + chatRoomId 의 JSON 형식
-{
-  roomId: chatRoomId(long),
-  roomPassword : password(String)
-}
-```
-- Return 구독 domain : '/topic/' + roomId
-- Return 메시지 : 단순 시스템 메세지
-
-<br/>
-
-## 3. 채팅보내기/ 받기('/app/send/' + chatRoomId)/ ('/topic/' + roomId)
-보내는 것과 받는 것의 JSON 차이가 있음.
-채팅 == 정답 맞추기가 되므로 정답과 정답자에 대한 Message가 별도로 와야 한다.
-그래서 유저가 친 채팅 반환 및 정답체크에 대한 반환은 **비동기로** 처리된다.
-- 즉, 유저 채팅 -> 유저 채팅 반환 & 정답체크(정답일시에만) : 비동기로 처리
-
-### 3-1. 채팅 보내기 받기 (qsRelationId == -1)
-**qsRelationId는** 해당 퀴즈의 노래에 대한 Id인데 해당 노래를 맞추는 상황이 아님을 **qsRelationId == -1**임으로 명시한다.
-- 범위 : qsRelation이 -1 인 시기는 게임 시작 전, 정답자 나온 이후 ~ 다음 노래 시작 전
-- 보내는 메세지
-```
-'/app/send/' + chatRoomId 의 Send JSON 형식
-{
-  chatMessage: messageText(String),
-  qsRelationId : qsRelationId(long) << -1
-}
-```
-- 받는 메세지(qsRelationId == -1 인 경우)
-```
-{
-  userName: userName(String),
-  chatMessage: messageText(String)
-}
-```
-
 ### 3-2 정답 체크 (qsRelationId != -1)
 - 보내는 메세지(기존과 동일하다)
 ```
@@ -151,7 +85,9 @@
   userName: userName(String),
   chatMessage: messageText(String)
 }
+```
 - 받는 메세지 (해당 채팅이 정답일 시 추가로 반환됨.)
+
 ```
 {
   answerUserName : (String),
