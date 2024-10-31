@@ -172,6 +172,9 @@ public class MusicChatService {
             List<QuizSongRelation> qsRelationList = quizSongRelationReopository
                     .findByQuizEntity_QuizId(roomEntity.getQuiz().getQuizId());
 
+            roomEntity.setParticipateAllowed(false);
+            roomRepository.save(roomEntity);
+
             List<Long> qsRelationIDList = new ArrayList<>();
             for(QuizSongRelation qsRelation : qsRelationList){
                 qsRelationIDList.add(qsRelation.getSongEntity().getSongId());
