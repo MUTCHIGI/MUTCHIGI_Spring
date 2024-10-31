@@ -41,7 +41,7 @@ public class SecurityConfig{
                         .requestMatchers( "/token", "/authTest/google").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll() // 정적 리소스 허용
-                        .requestMatchers( "/room/**").permitAll()
+                        .requestMatchers( "/room/idList", "/room/Entities" ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -49,6 +49,7 @@ public class SecurityConfig{
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT를 사용하는 경우 상태 비저장
                 ).oauth2Login(oauth2 -> oauth2 // OAuth2 로그인 설정
+                        .loginPage("/login")
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorization") // 기본 URI 설정
                         )
