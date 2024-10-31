@@ -1,12 +1,10 @@
 package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
-import com.CAUCSD.MUTCHIGI.quiz.hint.HintDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalTime;

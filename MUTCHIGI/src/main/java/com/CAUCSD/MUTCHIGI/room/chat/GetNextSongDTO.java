@@ -5,8 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ReceiveChatDTO {
-
-    private String chatMessage;
-    private long qsRelationId;
+public class GetNextSongDTO {
+    private boolean isGetNextSong;
 }

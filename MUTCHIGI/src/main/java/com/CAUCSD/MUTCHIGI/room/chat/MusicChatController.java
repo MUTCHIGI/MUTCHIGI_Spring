@@ -2,7 +2,6 @@ package com.CAUCSD.MUTCHIGI.room.chat;
 
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
-import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -40,7 +39,17 @@ public class MusicChatController {
     @SendTo("/topic/{chatRoomId}")
     public SendChatDTO setMessage(@DestinationVariable long chatRoomId, @Payload ReceiveChatDTO receiveChatDTO) {
         System.out.println(receiveChatDTO.getChatMessage());
-        return musicChatService.setMessageChat(receiveChatDTO);
+        return musicChatService.setMessageChat(chatRoomId, receiveChatDTO);
 
+    }
+
+    @MessageMapping("/getSong/{chatRoomId}/{songIndex}")
+    @SendTo("/topic/correct/{chatRoomId}")
+    public SendNextSongDTO getNextSong(
+            @DestinationVariable long chatRoomId ,
+            @DestinationVariable int songIndex
+    ){
+        System.out.println("songIndex : " + songIndex);
+        return musicChatService.getNextSongAndStart(chatRoomId, songIndex);
     }
 }

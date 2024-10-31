@@ -1,4 +1,4 @@
-package com.CAUCSD.MUTCHIGI.quiz.hint;
+package com.CAUCSD.MUTCHIGI.quizSong.hint;
 
 import lombok.Data;
 

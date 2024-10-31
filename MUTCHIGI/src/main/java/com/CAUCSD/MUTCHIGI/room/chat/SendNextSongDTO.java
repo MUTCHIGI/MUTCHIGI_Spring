@@ -5,8 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ReceiveChatDTO {
-
-    private String chatMessage;
+public class SendNextSongDTO {
     private long qsRelationId;
+    private String songURL;
+    private String originalSongURL;
+    private String timeStamp;
 }
