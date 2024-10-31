@@ -103,7 +103,8 @@
    - songIndex가 5인 경우 6번째 노래를 요청하는 것과 동일한 의미다. 
 - "게임 시작"(songIndex == 0)의 경우에는 "방장"이 이 Domain을 호출한다.
 - 그 이후에는 5. Skip Vote기능과 연계하여 진행한다. (상세한 사항은 5번에 작성하였다.)
-- 보내는 메세지는 없다. Domain의 PathVariable에 포함된 값으로 파악하여 서버에서 계산한다.
+- **다음 노래를 미리 받아서 수행하는 경우 그냥 songIndex만 다음껄로 보내면 된다.**
+- 보내는 메세지는 없다.
 - 받는 메세지
 
 ```
@@ -111,8 +112,7 @@
   qsRelationId : (long),
   songURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
   originalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
-  timeStamp : 00:00:00(String), << 노래 시작 시간이다.
-  isGetNextSong : (boolean) << 다음 노래에 대해 미리 가져오는 것인지 확인하는 Boolean타입 변수
+  timeStamp : 00:00:00(String) << 노래 시작 시간이다.
 }
 ```
 
