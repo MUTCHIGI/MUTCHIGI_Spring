@@ -111,7 +111,8 @@
   qsRelationId : (long),
   SongURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
   OriginalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
-  timeStamp : 00:00:00(String) << 노래 시작 시간이다.
+  timeStamp : 00:00:00(String), << 노래 시작 시간이다.
+  IsGetNextSong : (boolean) << 다음 노래에 대해 미리 가져오는 것인지 확인하는 Boolean타입 변수
 }
 ```
 
