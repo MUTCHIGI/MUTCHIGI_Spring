@@ -7,9 +7,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/testing")
 public class userLoginAPIController {
 
     private final JwtUtil jwtUtil;
@@ -35,7 +37,7 @@ public class userLoginAPIController {
         return ResponseEntity.ok("홈페이지");
     }
 
-    @GetMapping("/token")
+    @GetMapping("/gettoken")
     public ResponseEntity<String> getToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String jwtToken = jwtUtil.generateToken(authentication.getName(), MemberRole.Normal);

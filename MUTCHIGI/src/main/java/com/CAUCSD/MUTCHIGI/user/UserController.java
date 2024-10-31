@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/authTest")
 public class UserController {
 
     private static final String CLIENT_ID = "111904407916-7npkvko09qv63g09jqtcdnbbikp3ki7b.apps.googleusercontent.com";
@@ -53,7 +53,7 @@ public class UserController {
 
                 UserEntity registeredUser = userService.registerUser(userDTO);
 
-                //String jwt = jwtUtil.generateToken(registeredUser.getPlatformUserId());
+                String jwt = jwtUtil.generateToken(registeredUser.getPlatformUserId(), MemberRole.Normal);
 
                 Map<String, Object> responseBody = new HashMap<>();
 
@@ -63,6 +63,7 @@ public class UserController {
                 responseBody.put("name", registeredUser.getName());
                 responseBody.put("ProfileImageURL", registeredUser.getProfileImageURL());
                 responseBody.put("providerName", registeredUser.getProvider().getProviderName());
+                responseBody.put("jwt", jwt);
 
                 return ResponseEntity.ok(responseBody);
             }else{

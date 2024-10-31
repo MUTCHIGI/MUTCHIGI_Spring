@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 모든 경로에 임시 허용 -> 추후 컨트롤러 단위로 CORS 허용 방식으로 수정 예정
-                .allowedOrigins("http://localhost:5173", "http://localhost:8080", "http://localhost:8081", "http://127.0.0.1:8081", "http://127.0.0.1:5173") //허용할
+                .allowedOriginPatterns("*")//허용할
                 .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
                 .allowedHeaders("*") // 허용할 헤더들
                 .allowCredentials(true); // 자격증명(쿠키, HTTP 인증정보) 허용

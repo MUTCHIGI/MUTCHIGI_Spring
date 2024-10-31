@@ -34,10 +34,11 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.
                 authorizeHttpRequests( authorize -> authorize
-                        .requestMatchers("/oauth2/authorization/google/**").permitAll()
-                        .requestMatchers( "/login/oauth2/code/google/**").permitAll()
+                        .requestMatchers("/oauth2/authorization/google/**", "/oauth2/authorization/**").permitAll()
+                        .requestMatchers( "/login/oauth2/code/google/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers( "/login/success").permitAll()
-                        .requestMatchers( "/auth/google").permitAll()
+                        .requestMatchers( "/auth/google/**", "/oauth2/authorization/**").permitAll()
+                        .requestMatchers( "/token", "/authTest/google").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll() // 정적 리소스 허용
                         .requestMatchers( "/room/**").permitAll()

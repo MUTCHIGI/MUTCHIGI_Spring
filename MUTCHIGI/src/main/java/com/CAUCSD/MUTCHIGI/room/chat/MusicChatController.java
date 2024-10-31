@@ -44,7 +44,7 @@ public class MusicChatController {
     }
 
     @MessageMapping("/getSong/{chatRoomId}/{songIndex}")
-    @SendTo("/topic/correct/{chatRoomId}")
+    @SendTo("/topic/song/{chatRoomId}")
     public SendNextSongDTO getNextSong(
             @DestinationVariable long chatRoomId ,
             @DestinationVariable int songIndex

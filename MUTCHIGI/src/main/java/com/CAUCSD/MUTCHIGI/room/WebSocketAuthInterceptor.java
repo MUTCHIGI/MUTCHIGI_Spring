@@ -1,5 +1,7 @@
 package com.CAUCSD.MUTCHIGI.room;
 
+import com.CAUCSD.MUTCHIGI.room.Member.MemberEntity;
+import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import com.CAUCSD.MUTCHIGI.user.security.JwtUtil;
@@ -31,6 +33,12 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
     private UserRepository userRepository;
 
     @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private RoomRepository roomRepository;
+    
+    @Autowired
     public WebSocketAuthInterceptor (JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
 
@@ -61,6 +69,29 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                 }
             }
 
+        }else if(StompCommand.DISCONNECT.equals(headerAccessor.getCommand())){
+            SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
+            Object userId = simpAttributes.getAttribute("user-id");
+            long userIdLong = -1;
+            if(userId != null) {
+                userIdLong = Long.parseLong(String.valueOf(userId));
+                long roomId = Long.parseLong(String.valueOf(simpAttributes.getAttribute("chatRoom-id")));
+                List<MemberEntity> memberList = memberRepository.findByRoomEntity_RoomId(roomId);
+                for(MemberEntity memberEntity : memberList){
+                    if(memberEntity.getUserEntity().getUserId() == userIdLong){ // 해당 방에 User있는경우
+                        memberRepository.delete(memberEntity);
+                    }
+                }
+                
+                // 멤버를 DB에서 삭제한 이후 다시 불러왔을 때 그 리스트가 비어있다면 방 삭제
+                memberList = memberRepository.findByRoomEntity_RoomId(roomId);
+                if(memberList.isEmpty()){
+                    RoomEntity roomEntity = roomRepository.findById(roomId).orElse(null);
+                    if(roomEntity != null){
+                        roomRepository.delete(roomEntity);
+                    }
+                }
+            }
         }
         System.out.println(message);
         return message;

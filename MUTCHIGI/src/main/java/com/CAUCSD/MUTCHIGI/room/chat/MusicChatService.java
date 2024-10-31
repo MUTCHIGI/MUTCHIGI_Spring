@@ -4,6 +4,8 @@ import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberEntity;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.RoomAuthority;
@@ -27,7 +29,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class MusicChatService {
@@ -47,7 +53,7 @@ public class MusicChatService {
     private QuizSongRelationReopository quizSongRelationReopository;
 
     @Autowired
-    private SongRepository songRepository;
+    private HintRepository hintRepository;
 
     @Autowired
     private AnswerRepository answerRepository;
@@ -55,16 +61,19 @@ public class MusicChatService {
     @Autowired
     private SingerSongRelationRepository singerSongRelationRepository;
 
-
+    @Autowired
+    private final ScheduledExecutorService scheduler;
 
     @Autowired
-    public MusicChatService(SimpMessagingTemplate messagingTemplate) {
+    public MusicChatService(SimpMessagingTemplate messagingTemplate, ScheduledExecutorService scheduler) {
         this.messagingTemplate = messagingTemplate;
+        this.scheduler = scheduler;
     }
 
     public SendChatDTO joinRoomChat(JoinMemberDTO joinMemberDTO) {
         SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
         Object userId = simpAttributes.getAttribute("user-id");
+        simpAttributes.setAttribute("chatRoom-id", joinMemberDTO.getRoomId());
         long userIdLong = -1;
         if(userId != null) {
             userIdLong = Long.parseLong(String.valueOf(userId));
@@ -201,6 +210,10 @@ public class MusicChatService {
             }
             simpAttributes.setAttribute("answerList", answerList);
             System.out.println("songIndex Next : " + answerList);
+
+            List<HintEntity> hintList = hintRepository.findByQuizSongRelation(quizSongRelation);
+            sendHintWithEvent(chatRoomId, hintList);
+
         }else{
             return null;
         }
@@ -254,4 +267,16 @@ public class MusicChatService {
         }
 
     }
+
+    public void sendHintWithEvent(long chatRoomId ,List<HintEntity> hintEntityList){
+        hintEntityList.sort(Comparator.comparing(HintEntity::getHintTime));
+        int second = 0;
+        for(HintEntity hintEntity : hintEntityList){
+            scheduler.schedule(( )->{
+                messagingTemplate.convertAndSend("/topic/hint" + chatRoomId , hintEntity);
+            }, hintEntity.getHintTime().toSecondOfDay() - second, TimeUnit.SECONDS);
+            second = hintEntity.getHintTime().toSecondOfDay();
+        }
+    }
+
 }
