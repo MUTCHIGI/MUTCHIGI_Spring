@@ -28,7 +28,12 @@
     <input type="text" id="jwtToken" placeholder="JWT 토큰을 입력하세요" />
     <label for="chatRoom">채팅 방 입력:</label>
     <input type="number" id="chatRoom" placeholder="채팅 방 ID" />
+    <label for="userId">유저 ID 입력:</label>
+    <input type="number" id="userId" placeholder="유저 ID" />
+    <label for="password">비밀번호 입력:</label>
+    <input type="text" id="password" placeholder="비밀번호" />
     <button id="connectButton">연결하기</button>
+    
 
     <div id="messageContainer"></div>
 
@@ -41,6 +46,8 @@
         document.getElementById('connectButton').onclick = function() {
             const jwt_token = document.getElementById('jwtToken').value; // 입력받은 JWT 토큰
             const chatRoomId = Number(document.getElementById('chatRoom').value); // 채팅 방 ID
+            const chatUserId = Number(document.getElementById('userId').value);
+            const roomPassword = document.getElementById('password').value;
 
             const socket = new SockJS('http://localhost:8080/room'); // WebSocket URL
             stompClient = Stomp.over(socket); // STOMP 클라이언트 생성
@@ -50,7 +57,7 @@
                     'Authorization': 'Bearer ' + jwt_token, // JWT 토큰 설정
                 },
                 (frame) => {
-                    subscribe(chatRoomId); // 연결 후 채팅 방에 구독
+                    subscribe(chatRoomId, chatUserId); // 연결 후 채팅 방에 구독
                     console.log("connected: " + frame);
 
                     // 구독 성공 후 채팅방 ID 전송
@@ -58,8 +65,7 @@
 
                     const message = {
                         roomId: chatRoomId, 
-                        userId : 1,
-                        roomPassword : 'qweqwe'
+                        roomPassword : roomPassword
                     }
                     stompClient.send('/app/joinRoom/' + chatRoomId, {}, JSON.stringify(message));
                 },
@@ -70,13 +76,13 @@
         };
 
         // 구독 함수
-        function subscribe(roomId) {
+        function subscribe(roomId, chatUserId) {
             stompClient.subscribe('/topic/' + roomId, (message) => {
                 displayMessage(JSON.parse(message.body)); // 수신한 메시지 표시
             });
 
             // 오류 메시지 수신 구독
-            stompClient.subscribe('/userDisconnect/'+ 1 +'/queue/errors', (message) => {
+            stompClient.subscribe('/userDisconnect/'+ chatUserId +'/queue/errors', (message) => {
                 console.log("Received error message:", message.body);
                 alert(message.body);
             
@@ -97,7 +103,6 @@
             const chatRoomId = document.getElementById('chatRoom').value; // 채팅 방 ID
             if (messageText && stompClient) {
                 const ChatEntity = {
-                    userName: "홍길동", // 필드 이름을 userName으로 설정
                     chatMessage: messageText // 필드 이름을 chatMessage으로 설정
                 };
                 stompClient.send('/app/send/' + chatRoomId, {}, JSON.stringify(ChatEntity)); // 채팅 방 ID에 따라 메시지 전송

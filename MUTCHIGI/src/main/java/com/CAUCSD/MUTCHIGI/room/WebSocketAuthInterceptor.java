@@ -1,18 +1,24 @@
 package com.CAUCSD.MUTCHIGI.room;
 
+import com.CAUCSD.MUTCHIGI.user.UserEntity;
+import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import com.CAUCSD.MUTCHIGI.user.security.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpAttributes;
+import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.simp.user.SimpSession;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.List;
 
@@ -20,6 +26,9 @@ import java.util.List;
 public class WebSocketAuthInterceptor  implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     public WebSocketAuthInterceptor (JwtUtil jwtUtil) {
@@ -41,6 +50,11 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                 if (auth != null) {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                     headerAccessor.setUser(auth); // 인증된 사용자 설정
+
+                    UserEntity userEntity = userRepository.findByPlatformUserId(auth.getName());
+
+                    SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
+                    simpAttributes.setAttribute("user-id", userEntity.getUserId());
 
                 } else {
                     throw new RuntimeException("Unauthorized");

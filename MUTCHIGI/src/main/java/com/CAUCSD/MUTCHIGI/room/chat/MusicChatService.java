@@ -8,6 +8,8 @@ import com.CAUCSD.MUTCHIGI.room.RoomRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpAttributes;
+import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,15 @@ public class MusicChatService {
     }
 
     public SendChatDTO joinRoomChat(JoinMemberDTO joinMemberDTO) {
-        String errorDestination = "/userDisconnect/" + joinMemberDTO.getUserId() + "/queue/errors";
+        SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
+        Object userId = simpAttributes.getAttribute("user-id");
+        long userIdLong = -1;
+        if(userId != null) {
+            userIdLong = Long.parseLong(String.valueOf(userId));
+        }
+        System.out.println("userId : " + userIdLong);
+
+        String errorDestination = "/userDisconnect/" + userIdLong + "/queue/errors";
         System.out.println(errorDestination);
 
         RoomEntity roomEntity = roomRepository.findById(joinMemberDTO.getRoomId()).orElse(null);
@@ -51,12 +61,12 @@ public class MusicChatService {
         SendChatDTO sendChatDTO = new SendChatDTO();
         sendChatDTO.setUserName("[System]");
 
-        UserEntity userEntity = userRepository.findById(joinMemberDTO.getUserId()).orElse(null);
+        UserEntity userEntity = userRepository.findById(userIdLong).orElse(null);
         if(userEntity == null){
             sendChatDTO.setUserName("[Warning]");
             sendChatDTO.setChatMessage("저장되지 않은 User의 입장입니다.");
         }else{
-            if(memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(joinMemberDTO.getRoomId(), joinMemberDTO.getUserId()).isEmpty()){
+            if(memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(joinMemberDTO.getRoomId(), userIdLong).isEmpty()){
                 MemberEntity memberEntity = new MemberEntity();
                 memberEntity.setUserEntity(userEntity);
                 memberEntity.setRoomEntity(roomRepository.findById(joinMemberDTO.getRoomId()).orElse(null));
@@ -81,9 +91,17 @@ public class MusicChatService {
     }
 
     public SendChatDTO setMessageChat(ReceiveChatDTO receiveChatDTO){
-        UserEntity userEntity = userRepository.findById(receiveChatDTO.getUserId()).orElse(null);
-        String errorDestination = "/userDisconnect/" + receiveChatDTO.getUserId() + "/queue/errors";
+        SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
+        Object userId = simpAttributes.getAttribute("user-id");
+        long userIdLong = -1;
+        if(userId != null) {
+            userIdLong = Long.parseLong(String.valueOf(userId));
+        }
+        System.out.println("userId : " + userIdLong);
 
+        UserEntity userEntity = userRepository.findById(userIdLong).orElse(null);
+        String errorDestination = "/userDisconnect/" + userIdLong + "/queue/errors";
+        
         if(userEntity == null) {
             messagingTemplate.convertAndSend(errorDestination, "USET_NOT_FOUND");
             return null;

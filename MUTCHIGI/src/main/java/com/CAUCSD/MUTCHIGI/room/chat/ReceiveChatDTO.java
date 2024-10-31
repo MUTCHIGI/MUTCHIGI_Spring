@@ -7,6 +7,5 @@ import lombok.Setter;
 @Setter
 public class ReceiveChatDTO {
 
-    private long userId;
     private String chatMessage;
 }

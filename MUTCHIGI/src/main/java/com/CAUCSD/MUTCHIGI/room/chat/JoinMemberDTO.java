@@ -7,6 +7,5 @@ import lombok.Setter;
 @Setter
 public class JoinMemberDTO {
     private long roomId;
-    private long userId;
     private String roomPassword;
 }
