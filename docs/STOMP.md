@@ -79,7 +79,7 @@
   qsRelationId : qsRelationId(long)
 }
 ```
-- 받는 메세지 (단순 채팅 반환) >>('/topic/' + roomId)
+- 받는 메세지 (단순 채팅 반환) >> ('/topic/' + roomId)
 ```
 {
   userName: userName(String),
@@ -107,7 +107,7 @@
 - 보내는 메세지는 없다.
 - 받는 메세지
 
-```
+``` 구독 : ('/topic/song/' + chatRoomId)
 {
   qsRelationId : (long),
   songURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
@@ -128,7 +128,7 @@
   voteNum : (int) <= 초기 숫자는 0이다.
 }
 ```
-- 받는 메세지
+- 받는 메세지 >> 구독 : ('/topic/vote/' + chatRoomId)
 ```
 {
   voteNum : (int)
