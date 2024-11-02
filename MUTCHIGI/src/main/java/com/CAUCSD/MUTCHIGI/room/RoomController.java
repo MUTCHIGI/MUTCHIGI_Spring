@@ -84,6 +84,7 @@ public class RoomController {
     }
 
     @GetMapping("/superUser")
+    @Operation(summary = "해당 Room의 방장이 누구인지 확인하는 API")
     public ResponseEntity<Long> getSuperUserList(
             @RequestParam long roomId
     ){

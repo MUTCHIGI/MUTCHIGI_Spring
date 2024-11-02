@@ -33,12 +33,26 @@
     <label for="password">비밀번호 입력:</label>
     <input type="text" id="password" placeholder="비밀번호" />
     <button id="connectButton">연결하기</button>
+
+    <label for="songIndex">노래Index 입력:</label>
+    <input type="number" id="songIndex" placeholder="songIndex" />
+    <button id="songIndexButton">노래Index 전송</button>
+
+    <label for="qsRelationId">qsRelationId 입력:</label>
+    <input type="number" id="qsRelationId" placeholder="qsRelationId" />
+    <button id="qsButton">qsRelationId 전송</button>
     
 
     <div id="messageContainer"></div>
 
+
     <input type="text" id="messageInput" placeholder="메시지를 입력하세요" />
     <button id="sendButton">전송</button>
+    <input type="number" id="voteNum" placeholder="투표숫자" />
+    <button id="voteButton">투표하기</button>
+
+    <input type="number" id="kickUserNum" placeholder="강퇴할 유저 ID" />
+    <button id="kickButton">강퇴하기</button>
 
     <script>
         let stompClient = null;
@@ -48,6 +62,9 @@
             const chatRoomId = Number(document.getElementById('chatRoom').value); // 채팅 방 ID
             const chatUserId = Number(document.getElementById('userId').value);
             const roomPassword = document.getElementById('password').value;
+            const songIndex = Number(document.getElementById('songIndex').value);
+            const qsRelationId = Number(document.getElementById('qsRelationId').value);
+            const voteNum = Number(document.getElementById('voteNum').value);
 
             const socket = new SockJS('http://localhost:8080/room'); // WebSocket URL
             stompClient = Stomp.over(socket); // STOMP 클라이언트 생성
@@ -57,7 +74,7 @@
                     'Authorization': 'Bearer ' + jwt_token, // JWT 토큰 설정
                 },
                 (frame) => {
-                    subscribe(chatRoomId, chatUserId); // 연결 후 채팅 방에 구독
+                    subscribe(chatRoomId, chatUserId, songIndex, qsRelationId); // 연결 후 채팅 방에 구독
                     console.log("connected: " + frame);
 
                     // 구독 성공 후 채팅방 ID 전송
@@ -76,10 +93,17 @@
         };
 
         // 구독 함수
-        function subscribe(roomId, chatUserId) {
+        function subscribe(roomId, chatUserId, songIndex) {
             stompClient.subscribe('/topic/' + roomId, (message) => {
                 displayMessage(JSON.parse(message.body)); // 수신한 메시지 표시
             });
+
+            stompClient.subscribe('/topic/song/' + roomId);
+            stompClient.subscribe('/topic/vote/' + roomId);
+            stompClient.subscribe('/topic/hint/' + roomId);
+            stompClient.subscribe('/topic/correct/' + roomId);
+            stompClient.subscribe('/topic/kick/'+ roomId);
+            stompClient.subscribe('/topic/superUser/'+ roomId);
 
             // 오류 메시지 수신 구독
             stompClient.subscribe('/userDisconnect/'+ chatUserId +'/queue/errors', (message) => {
@@ -94,6 +118,10 @@
                     alert("해당 방이 존재하지 않습니다. 연결을 종료합니다.");
                     stompClient.disconnect(); // STOMP 연결 종료s
                 }
+                if (message.body === "KICKED_FROM_SERVER"){
+                    alert("방장에 의해 강제퇴장되었습니다. 연결을 종료합니다.");
+                    stompClient.disconnect();
+                }
             });
         }
 
@@ -101,15 +129,49 @@
         document.getElementById('sendButton').onclick = function() {
             const messageText = document.getElementById('messageInput').value; // 입력된 메시지
             const chatRoomId = document.getElementById('chatRoom').value; // 채팅 방 ID
+            const qsRelationId = Number(document.getElementById('qsRelationId').value);
             if (messageText && stompClient) {
                 const ChatEntity = {
-                    chatMessage: messageText // 필드 이름을 chatMessage으로 설정
+                    chatMessage: messageText, // 필드 이름을 chatMessage으로 설정
+                    qsRelationId : qsRelationId
                 };
                 stompClient.send('/app/send/' + chatRoomId, {}, JSON.stringify(ChatEntity)); // 채팅 방 ID에 따라 메시지 전송
                 console.log(JSON.stringify(ChatEntity));
                 document.getElementById('messageInput').value = ''; // 입력 필드 초기화
             }
         };
+
+        document.getElementById('songIndexButton').onclick = function() {
+            const chatRoomId = Number(document.getElementById('chatRoom').value);
+            const songIndex = Number(document.getElementById('songIndex').value);
+
+            stompClient.send('/app/getSong/' + chatRoomId +'/'+ songIndex);
+        }
+
+        document.getElementById('voteButton').onclick = function() {
+            const chatRoomId = Number(document.getElementById('chatRoom').value);
+            const voteNum = Number(document.getElementById('voteNum').value);
+
+            const VoteDTO = {
+                        voteNum : voteNum
+            }
+
+            stompClient.send('/app/skipVote/' + chatRoomId, {}, JSON.stringify(VoteDTO));
+        }
+
+        document.getElementById('qsButton').onclick = function() {
+            const chatRoomId = Number(document.getElementById('chatRoom').value);
+            const qsRelationId = Number(document.getElementById('qsRelationId').value);
+
+            stompClient.send('/app/getHint/' + chatRoomId + '/'+ qsRelationId);
+        }
+
+        document.getElementById('kickButton').onclick = function() {
+            const chatRoomId = Number(document.getElementById('chatRoom').value);
+            const kickUserNum = Number(document.getElementById('kickUserNum').value);
+
+            stompClient.send('/app/kickMember/' + chatRoomId + '/'+ kickUserNum);
+        }
 
         // 수신한 메시지 표시 함수
         function displayMessage(message) {

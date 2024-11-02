@@ -2,25 +2,28 @@ package com.CAUCSD.MUTCHIGI.room;
 
 import com.CAUCSD.MUTCHIGI.room.Member.MemberEntity;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
+import com.CAUCSD.MUTCHIGI.room.Member.RoomAuthority;
+import com.CAUCSD.MUTCHIGI.room.chat.KickedUserDTO;
+import com.CAUCSD.MUTCHIGI.room.chat.SendChatDTO;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import com.CAUCSD.MUTCHIGI.user.security.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpAttributes;
 import org.springframework.messaging.simp.SimpAttributesContextHolder;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.user.SimpSession;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.List;
 
@@ -37,6 +40,10 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    @Lazy
+    private SimpMessagingTemplate checkMessageTemplate;
     
     @Autowired
     public WebSocketAuthInterceptor (JwtUtil jwtUtil) {
@@ -80,9 +87,25 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                 for(MemberEntity memberEntity : memberList){
                     if(memberEntity.getUserEntity().getUserId() == userIdLong){ // 해당 방에 User있는경우
                         memberRepository.delete(memberEntity);
+                        break;
                     }
                 }
-                
+                Object chatRoomId = simpAttributes.getAttribute("chatRoom-id");
+                long chatRoomIdLong = -1;
+                if(chatRoomId != null){
+                    chatRoomIdLong = Long.parseLong(String.valueOf(chatRoomId));
+                }
+                KickedUserDTO kickedUserDTO = new KickedUserDTO();
+                kickedUserDTO.setUserId(userIdLong);
+                checkMessageTemplate.convertAndSend("/topic/kick/"+chatRoomIdLong, kickedUserDTO);
+                SendChatDTO sendSystem = new SendChatDTO();
+                UserEntity disconnectUser = userRepository.findById(userIdLong).orElse(null);
+                if(disconnectUser != null){
+                    sendSystem.setUserName("[System]");
+                    sendSystem.setChatMessage(disconnectUser.getName() + "님이 퇴장하였습니다..");
+                    checkMessageTemplate.convertAndSend("/topic/"+chatRoomIdLong, sendSystem);
+                }
+
                 // 멤버를 DB에서 삭제한 이후 다시 불러왔을 때 그 리스트가 비어있다면 방 삭제
                 memberList = memberRepository.findByRoomEntity_RoomId(roomId);
                 if(memberList.isEmpty()){
@@ -90,6 +113,17 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
                     if(roomEntity != null){
                         roomRepository.delete(roomEntity);
                     }
+                }else{
+                    MemberEntity remainMember =  memberList.get(0);
+                    remainMember.setRoomAuthority(RoomAuthority.FIRST);
+                    memberRepository.save(remainMember);
+                    sendSystem.setUserName("[System]");
+                    sendSystem.setChatMessage(remainMember.getUserEntity().getName() + "님이 방장이 되었습니다.");
+                    KickedUserDTO superUser = new KickedUserDTO();
+                    superUser.setUserId(remainMember.getUserEntity().getUserId());
+                    checkMessageTemplate.convertAndSend("/topic/superUser/"+chatRoomIdLong, superUser);
+                    checkMessageTemplate.convertAndSend("/topic/"+chatRoomIdLong, sendSystem);
+
                 }
             }
         }

@@ -4,6 +4,7 @@ import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberEntity;
@@ -11,10 +12,6 @@ import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.RoomAuthority;
 import com.CAUCSD.MUTCHIGI.room.RoomEntity;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
-import com.CAUCSD.MUTCHIGI.song.SongEntity;
-import com.CAUCSD.MUTCHIGI.song.SongRepository;
-import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
-import com.CAUCSD.MUTCHIGI.song.singer.SingerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
@@ -29,11 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class MusicChatService {
@@ -61,13 +54,10 @@ public class MusicChatService {
     @Autowired
     private SingerSongRelationRepository singerSongRelationRepository;
 
-    @Autowired
-    private final ScheduledExecutorService scheduler;
 
     @Autowired
-    public MusicChatService(SimpMessagingTemplate messagingTemplate, ScheduledExecutorService scheduler) {
+    public MusicChatService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
-        this.scheduler = scheduler;
     }
 
     public SendChatDTO joinRoomChat(JoinMemberDTO joinMemberDTO) {
@@ -215,7 +205,7 @@ public class MusicChatService {
             System.out.println("songIndex Next : " + answerList);
 
             List<HintEntity> hintList = hintRepository.findByQuizSongRelation(quizSongRelation);
-            sendHintWithEvent(chatRoomId, hintList);
+
 
         }else{
             return null;
@@ -271,15 +261,70 @@ public class MusicChatService {
 
     }
 
-    public void sendHintWithEvent(long chatRoomId ,List<HintEntity> hintEntityList){
-        hintEntityList.sort(Comparator.comparing(HintEntity::getHintTime));
-        int second = 0;
-        for(HintEntity hintEntity : hintEntityList){
-            scheduler.schedule(( )->{
-                messagingTemplate.convertAndSend("/topic/hint" + chatRoomId , hintEntity);
-            }, hintEntity.getHintTime().toSecondOfDay() - second, TimeUnit.SECONDS);
-            second = hintEntity.getHintTime().toSecondOfDay();
+    public List<HintDTO> getHintFromDB(long chatRoomId, long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationReopository.findById(qsRelationId).orElse(null);
+        if (quizSongRelation != null){
+            List<HintEntity> hintList = hintRepository.findByQuizSongRelation(quizSongRelation);
+
+            List<HintDTO> hintDTOS = new ArrayList<>();
+            for(HintEntity hint : hintList){
+                HintDTO hintDTO = new HintDTO();
+                hintDTO.setHintText(hint.getHintText());
+                hintDTO.setHintType(hint.getHintType());
+                hintDTO.setHour(hint.getHintTime().getHour());
+                hintDTO.setMinute(hint.getHintTime().getMinute());
+                hintDTO.setSecond(hint.getHintTime().getSecond());
+                hintDTOS.add(hintDTO);
+            }
+            return hintDTOS;
+        }else{
+            return null;
         }
     }
 
+    public KickedUserDTO kickMember(long chatRoomId, long userId){
+        KickedUserDTO kickedUserDTO = new KickedUserDTO();
+
+        SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
+        Object whoOrderUserId = simpAttributes.getAttribute("user-id");
+        long userIdLong = -1;
+        if(whoOrderUserId != null) {
+            userIdLong = Long.parseLong(String.valueOf(whoOrderUserId));
+        }
+        System.out.println("LongId : " + userIdLong + "userId : " + userId);
+        if(userIdLong != -1 && userIdLong != userId){
+            UserEntity whoOrderUser = userRepository.findById(userIdLong).orElse(null);
+
+            if(whoOrderUser != null){
+                MemberEntity whoOrderMember = memberRepository.findByUserEntity(whoOrderUser);
+
+                if(whoOrderMember.getRoomAuthority() == RoomAuthority.FIRST){
+                    System.out.println("WhoOrderMember");
+                    List<MemberEntity> memberEntityList = memberRepository.findByRoomEntity_RoomId(chatRoomId);
+                    UserEntity userEntity = userRepository.findById(userId).orElse(null);
+                    String kickDestination = "/userDisconnect/" + userId + "/queue/errors";
+
+                    if (userEntity != null){
+                        System.out.println("userEntity!=null");
+                        MemberEntity kickMember = memberRepository.findByUserEntity(userEntity);
+                        System.out.println("List MemberEntity : " + memberEntityList.get(1).getUserEntity().getName() + " : " +memberEntityList.get(0).getUserEntity().getName() + "kickMember" + kickMember.getUserEntity().getName());
+                        for(MemberEntity checkMember : memberEntityList){
+                            if(checkMember.getMemberId() == kickMember.getMemberId()){
+                                System.out.println("contains");
+                                messagingTemplate.convertAndSend(kickDestination, "KICKED_FROM_SERVER");
+                                SendChatDTO sendSystem = new SendChatDTO();
+                                sendSystem.setUserName("[System]");
+                                sendSystem.setChatMessage(userEntity.getName() + "님이 강제퇴장되었습니다.");
+                                messagingTemplate.convertAndSend("/topic/"+chatRoomId, sendSystem);
+                                memberRepository.delete(kickMember);
+                                kickedUserDTO.setUserId(userId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return kickedUserDTO;
+    }
 }

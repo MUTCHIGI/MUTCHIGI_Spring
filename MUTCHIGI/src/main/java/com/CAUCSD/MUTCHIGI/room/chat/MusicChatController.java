@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.room.chat;
 
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
@@ -9,6 +10,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+
+import java.util.List;
 
 @Controller
 public class MusicChatController {
@@ -60,5 +63,23 @@ public class MusicChatController {
             @Payload VoteDTO voteDTO
     ){
         return musicChatService.VoteToSkip(chatRoomId,voteDTO);
+    }
+
+    @MessageMapping("/getHint/{chatRoomId}/{qsRelationId}")
+    @SendTo("/topic/hint/{chatRoomId}")
+    public List<HintDTO> getHint(
+            @DestinationVariable long chatRoomId,
+            @DestinationVariable long qsRelationId
+    ){
+        return musicChatService.getHintFromDB(chatRoomId,qsRelationId);
+    }
+
+    @MessageMapping("/kickMember/{chatRoomId}/{userId}")
+    @SendTo("/topic/kick/{chatRoomId}")
+    public KickedUserDTO kickMember(
+            @DestinationVariable long chatRoomId,
+            @DestinationVariable long userId
+    ){
+        return musicChatService.kickMember(chatRoomId,userId);
     }
 }
