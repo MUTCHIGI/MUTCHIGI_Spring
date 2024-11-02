@@ -135,9 +135,10 @@
 }
 ```
 
-## 6. 힌트제공(Server 자체에서 이벤트 처리로 제공할 예정임)
-- 서버 자체에서 문제를 제공할 당시에 미리 Event를 스케줄링해두고 이에 매핑시켜서 메시지로 전송할 계획이다.
-- 즉 이벤트로 발생하기 때문에 보내는 메세지는 없고 받기만 하면 된다.
+## 6. 힌트제공('/app/getHint/' + chatRoomId + '/' + qsRelationId)
+- 4번을 받은 직후에 진행, 힌트 객체자체를 미리 제공해주고 클라이언트에서 진행 시간에 따라서 힌트를 Open하도록 함
+- 서버 자체에서 다음 문제를 제공함과 동시에 Hint 객체들을 같이 받아서 처리 해주도록 클라이언트에서 구성하여야 함.
+- 보내는 메세지는 없이 PathVariable을 이용해 처리한다.
 - 받는 메세지 >> 구독 : ('/topic/hint/' + chatRoomId)
 ```
 {
@@ -150,8 +151,34 @@
 ## 7. 연결 끊기
 - 연결은 프론트단에서 DISCONNECT를 해도 연결이 끊기고 연결중인 탭을 끊어도 연결이 끊긴다.
 - 연결을 끊은 이후에 멤버 삭제, 방에 남은 인원이 없는 경우 방 삭제 같은 로직도 모두 구성을 완료 하였다.
+- 만약 방장이 방에서 퇴장한다면 자동으로 새롭게 방장이 배정된다.
+
+## 7-1 방장 새로 배정
+- 앞에서 방장이 퇴장한다면 새롭게 방장을 서버에서 배정해준다.
+- 받는 메세지 >> 구독 ('/topic/superUser/' + chatRoomId)
+```
+{
+  userId : (long)
+}
+```
+
+## 8. 강퇴하기('/app/kickMember/ + chatRoomId + '/' + userId)
+- 방장 권한이 있는 사람만 이용이 가능하다. 방장권한이 없는자는 내부로직으로 걸러져 이용이 불가능하다.
+- 방장 권한을 누가 가지고 있는 지는 기존 Rest API 중 /room/superUser로 알 수 있다.
+- 일반적으로 방장은 방을 만든 사람에게 우선 부여된다.
+- Rest API중 /room/userList로 얻은 UserId를 이용해서 강퇴한다.
+- 실제로 Disconnect 되는 것은 아래 오류 구독에서 처리된다.
+- 강퇴된 이후 서버차원에서 메세지를 보내준다.
+- 보내는 메세지는 없고 PathVariable을 이용해 처리한다.
+- 받는 메세지 >> 구독 ('/topic/kick/' + chatRoomId)
+```
+{
+  userId : (long)
+}
+```
 
 # 오류 구독 '/userDisconnect/{userId}/queue/errors'시 받는 메세지
 ## 1, 2 공통
 - **INVALID_PASSWORD**(/app/joinRoom/' + chatRoomId) : 비밀번호 틀릴 시 받는 메세지 -> STOMP 연결 DISCONNECT해야함
 - **ROOM_NOT_FOUND** : 해당 방은 존재하지 않는 방임 -> STOMP 연결 DISCONNECT해야함
+- **KICKED_FROM_SERVER** : 강퇴되었음. -> DISCONNECT
