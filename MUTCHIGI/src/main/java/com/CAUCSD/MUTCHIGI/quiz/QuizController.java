@@ -3,12 +3,17 @@ package com.CAUCSD.MUTCHIGI.quiz;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -58,15 +63,25 @@ public class QuizController {
     public  ResponseEntity<List<QuizEntity>> getQuizEntities(
             @RequestParam List<Long> idList
     ){
-        List<QuizEntity> quizEntities;
-        try {
-            quizEntities = quizRepository.findAllById(idList);
-            if(quizEntities.isEmpty()){
-                return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).build();
-            }
-            return ResponseEntity.ok(quizEntities);
+       try {
+            return ResponseEntity.ok(quizService.getQuizByIdList(idList));
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/images/{filename}")
+    @ResponseBody
+    public ResponseEntity<Resource> serveImage(@PathVariable String filename) throws Exception {
+
+        Resource imageResource = quizService.serveImageFromLocalStorage(filename);
+        if (imageResource.exists() || imageResource.isReadable()) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + imageResource.getFilename() + "\"")
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(imageResource);
+        } else {
+            throw new RuntimeException("Could not read the file: " + filename);
         }
     }
     

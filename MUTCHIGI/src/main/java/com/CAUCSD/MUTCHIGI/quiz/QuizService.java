@@ -3,17 +3,32 @@ package com.CAUCSD.MUTCHIGI.quiz;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Base64Utils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -59,6 +74,19 @@ public class QuizService {
 
     public QuizEntity getQuizById(long quizId){
         return quizRepository.findById(quizId).orElse(null);
+    }
+
+    public List<QuizEntity> getQuizByIdList(List<Long> quizIdList) throws IOException {
+        List<QuizEntity> quizEntities = quizRepository.findAllById(quizIdList);
+
+        return quizEntities;
+    }
+
+    public Resource serveImageFromLocalStorage(String filename) throws  IOException{
+        Path imageStoragePath = Paths.get(thumbnailDir);
+        Path filePath = imageStoragePath.resolve(filename);
+        Resource getQuizImageResource = new UrlResource(filePath.toUri());
+        return getQuizImageResource;
     }
 
     public QuizEntity updateQuiz(QuizEntity quizEntity){
@@ -140,6 +168,14 @@ public class QuizService {
         return fileName;
     }
 
-
+    // 이미지 리사이즈 메서드
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+        Image scaledImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = resizedImage.createGraphics();
+        g2d.drawImage(scaledImage, 0, 0, null);
+        g2d.dispose();
+        return resizedImage;
+    }
 
 }
