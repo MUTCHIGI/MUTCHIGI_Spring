@@ -200,7 +200,15 @@ public class SongService {
 
 
     public Void deleteYoutubeSongDB(long qsRelationId){
-        quizSongRelationRepository.deleteById(qsRelationId);
+        QuizSongRelation deleteQSRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(deleteQSRelation != null){
+            List<AnswerEntity> deleteAnswerList = answerRepository.findByQuizSongRelation(deleteQSRelation);
+            answerRepository.deleteAll(deleteAnswerList);
+            List<HintEntity> deleteHintList = hintRepository.findByQuizSongRelation(deleteQSRelation);
+            hintRepository.deleteAll(deleteHintList);
+            quizSongRelationRepository.deleteById(qsRelationId);
+        }
+
 
         // 삭제 후 확인
         if (!quizSongRelationRepository.existsById(qsRelationId)) {

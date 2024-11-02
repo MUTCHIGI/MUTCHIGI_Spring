@@ -128,6 +128,7 @@ public class WebSocketAuthInterceptor  implements ChannelInterceptor {
             }
         }
         System.out.println(message);
+
         return message;
     }
 
