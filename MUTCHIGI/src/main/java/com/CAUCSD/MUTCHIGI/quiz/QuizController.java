@@ -71,7 +71,12 @@ public class QuizController {
     }
 
     @GetMapping("/images/{filename}")
-    @ResponseBody
+    @Operation(summary = "퀴즈 썸네일 이미지를 inline으로 반환함",
+    description = """
+            퀴즈 썸네일 이미지 filename은 QuizEnitiy로 반환받은 것중 thumbnailURL에 해당함.
+            이거를 CONTENT_DISPOSITION과 inline 형태로 반환할 예정임.
+            이미지를 PNG형식 고정
+            """)
     public ResponseEntity<Resource> serveImage(@PathVariable String filename) throws Exception {
 
         Resource imageResource = quizService.serveImageFromLocalStorage(filename);
