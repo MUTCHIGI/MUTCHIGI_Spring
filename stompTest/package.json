@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@stomp/stompjs": "^7.0.0"
+  },
+  "scripts": {
+    "start": "http-server ."
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

@@ -1,6 +1,6 @@
 package com.CAUCSD.MUTCHIGI.song;
 
-import com.CAUCSD.MUTCHIGI.quiz.hint.HintDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import lombok.Data;
 
 import java.util.List;

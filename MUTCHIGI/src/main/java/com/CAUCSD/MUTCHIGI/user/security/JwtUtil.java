@@ -22,6 +22,7 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", memberRole.name()); // 단일 역할을 리스트로 감싸기
 
+        System.out.println("토큰 생성중");
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)

@@ -1,12 +1,10 @@
 package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
-import com.CAUCSD.MUTCHIGI.quiz.hint.HintDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalTime;
@@ -121,10 +119,11 @@ public class SongController {
     }
 
     @PostMapping("/youtube/{qsRelationId}/hint")
-    @Operation(summary = "해당 퀴즈에 포함된 노래에 대한 퀴즈를 저장하는 API, 갯수는 위에서 확인함",
+    @Operation(summary = "해당 퀴즈에 포함된 노래에 대한 List<힌트>를 저장하는 API, 갯수는 위에서 확인함",
             description = """
                                /youtube/hintCount에서 얻은 퀴즈 갯수로 Front에서 예외처리를 일단 해야 한다.
                                백엔드에서는 아직 구현되어 있지 않음. 구현되면 추가하겠음.
+                               힌트를 List로 제공해주면 된다. 일일이 보낼 필요 없이 한 번에 보낼 것
                                 """)
     public ResponseEntity<List<Long>> addHintList(
             @RequestBody List<HintDTO> hintDTOList,

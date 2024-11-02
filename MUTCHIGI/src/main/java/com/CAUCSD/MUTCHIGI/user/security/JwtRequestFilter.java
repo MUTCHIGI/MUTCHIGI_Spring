@@ -33,6 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
+        System.out.println("header" + authorizationHeader);
         String username = null;
         String jwtToken = null;
 
@@ -54,6 +55,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 return;
             }
         }
+        System.out.println("response : " + response + "jwtToken : " + jwtToken + "username : " + username + ", jwtToken : " + jwtToken);
         filterChain.doFilter(request, response);
     }
 }
