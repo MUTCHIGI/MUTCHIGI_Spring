@@ -165,22 +165,35 @@ public class SongService {
     public List<Long> saveYoutubeAnswer(List<String> answerList, long qsRelationId){
         List<Long> idList = new ArrayList<>();
 
-        for(String answer : answerList){
-            AnswerEntity answerEntity = new AnswerEntity();
-            QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
-            if(quizSongRelation == null){
-                return null;
-            }
-            answerEntity.setAnswer(answer);
-            answerEntity.setQuizSongRelation(quizSongRelation);
-            answerEntity.setLLMUsed(false);
-            answerEntity = answerRepository.save(answerEntity);
-            idList.add(answerEntity.getAnswerId());
-        }
+        // QuizSongRelation 조회
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId)
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 QuizSongRelation이 존재하지 않습니다."));
 
-        if(idList.size() > 20){
+        // AnswerEntity 목록 조회
+        List<AnswerEntity> answerEntityList = answerRepository.findByQuizSongRelation(quizSongRelation);
+
+        // answerList의 크기 검증
+        if (answerList.size() > 20) {
             throw new IllegalArgumentException("답변 목록의 크기가 20을 초과할 수 없습니다.");
         }
+
+        // 각 AnswerEntity에 대해 답변 세팅
+        for (int i = 0; i < answerEntityList.size() && i < answerList.size(); i++) {
+            AnswerEntity getDBAnswerEntity = answerEntityList.get(i);
+            getDBAnswerEntity.setAnswer(answerList.get(i));
+            getDBAnswerEntity.setLLMUsed(false);
+            idList.add(getDBAnswerEntity.getAnswerId());
+        }
+
+        // 남아 있는 AnswerEntity 제거
+        if (answerList.size() < answerEntityList.size()) {
+            for (int i = answerList.size(); i < answerEntityList.size(); i++) {
+                answerRepository.delete(answerEntityList.get(i)); // 삭제
+            }
+        }
+
+        answerRepository.saveAll(answerEntityList.subList(0, answerList.size()));
+
         return idList;
     }
 
@@ -260,60 +273,80 @@ public class SongService {
         return youtubeSongDTOList;
     }
 
-    public List<String> getAnswerFromGPT(long qsRelationId){
+    public List<String> getAnswerFromDBwithGPT(long qsRelationId){
         QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
         if(quizSongRelation == null){
             return null;
         }
-        String songTitle = quizSongRelation.getSongEntity().getSongName();
-        String updatedPrompt = prompt + "The title is " + songTitle;
+        List<AnswerEntity> answerEntityList = answerRepository.findByQuizSongRelation(quizSongRelation);
+        List<String> gptAnswers = new ArrayList<>();
+        if(answerEntityList.isEmpty()){
+            String songTitle = quizSongRelation.getSongEntity().getSongName();
+            String updatedPrompt = prompt + "The title is " + songTitle;
 
-        // response_format 설정
-        Map<String, Object> responseFormat = new HashMap<>();
-        responseFormat.put("type", "json_schema");
-        responseFormat.put("json_schema", Map.of(
-                "name", "answer_schema",
-                "schema", Map.of(
-                        "type", "object",
-                        "properties", Map.of(
-                                "answer", Map.of(
-                                        "description", "The answers that appears in the input",
-                                        "type", "array",
-                                        "items", Map.of("type", "string")
-                                )
-                        ),
-                        "required", List.of("answer"),
-                        "additionalProperties", false
-                )
-        ));
+            // response_format 설정
+            Map<String, Object> responseFormat = new HashMap<>();
+            responseFormat.put("type", "json_schema");
+            responseFormat.put("json_schema", Map.of(
+                    "name", "answer_schema",
+                    "schema", Map.of(
+                            "type", "object",
+                            "properties", Map.of(
+                                    "answer", Map.of(
+                                            "description", "The answers that appears in the input",
+                                            "type", "array",
+                                            "items", Map.of("type", "string")
+                                    )
+                            ),
+                            "required", List.of("answer"),
+                            "additionalProperties", false
+                    )
+            ));
 
-        GPTRequest gptRequest = new GPTRequest(model, updatedPrompt, responseFormat);
-        Map<String, Object> gptResponse = getRestTemplate.postForObject(apiURL, gptRequest, Map.class);
+            GPTRequest gptRequest = new GPTRequest(model, updatedPrompt, responseFormat);
+            Map<String, Object> gptResponse = getRestTemplate.postForObject(apiURL, gptRequest, Map.class);
 
-        //System.out.println(gptResponse);
+            //System.out.println(gptResponse);
 
-        try {
-            // 응답 구조에서 answer 추출
-            if (gptResponse != null) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) gptResponse.get("choices");
-                if (choices != null && !choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    if (message != null && message.containsKey("content")) {
-                        // content를 JSON으로 파싱
-                        Map<String, Object> content = new ObjectMapper().readValue((String) message.get("content"), Map.class);
-                        if (content.containsKey("answer")) {
-                            return (List<String>) content.get("answer");
+            try {
+                // 응답 구조에서 answer 추출
+                if (gptResponse != null) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) gptResponse.get("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                        if (message != null && message.containsKey("content")) {
+                            // content를 JSON으로 파싱
+                            Map<String, Object> content = new ObjectMapper().readValue((String) message.get("content"), Map.class);
+                            if (content.containsKey("answer")) {
+                                gptAnswers.addAll ((List<String>) content.get("answer"));
+                            }
                         }
                     }
+                    List<AnswerEntity> gptAnswerEntityList = new ArrayList<>();
+                    for(String answer : gptAnswers){
+                        AnswerEntity answerEntity = new AnswerEntity();
+                        answerEntity.setAnswer(answer);
+                        answerEntity.setLLMUsed(true);
+                        answerEntity.setQuizSongRelation(quizSongRelation);
+                        gptAnswerEntityList.add(answerEntity);
+                    }
+                    answerRepository.saveAll(gptAnswerEntityList);
+
+
+                }else{
+                    return null;
                 }
-            }else{
+            }catch (JsonProcessingException e){
+                e.printStackTrace();
                 return null;
             }
-        }catch (JsonProcessingException e){
-            e.printStackTrace();
-            return null;
+        }else{
+            for(AnswerEntity answerEntity : answerEntityList){
+                gptAnswers.add(answerEntity.getAnswer());
+            }
         }
-        return null;
+
+        return gptAnswers;
     }
 
     private String extractYoutubeVideoId(String youtubeURL) {

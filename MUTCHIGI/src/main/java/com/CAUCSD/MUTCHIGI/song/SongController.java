@@ -140,7 +140,7 @@ public class SongController {
     public ResponseEntity<List<String>> getYoutbueAnswerFromGPT(
             @PathVariable long qsRelationId
     ){
-        return ResponseEntity.ok(songService.getAnswerFromGPT(qsRelationId));
+        return ResponseEntity.ok(songService.getAnswerFromDBwithGPT(qsRelationId));
     }
 
 
