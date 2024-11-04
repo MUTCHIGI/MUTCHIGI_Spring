@@ -2,17 +2,17 @@ package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.answer.*;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
-import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
-import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +23,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +53,14 @@ public class SongService {
     @Autowired
     private HintRepository hintRepository;
 
+    @Value("${openai.model}")
+    private String model;
+
+    @Value("${openai.api.url}")
+    private String apiURL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("${youtube.api,key}")
     private String youtubeAPIKey;
@@ -58,6 +68,19 @@ public class SongService {
     private String baseYoutubeURL = "https://www.googleapis.com/youtube/v3/videos";
 
     private String baseYoutubeListURL = "https://www.googleapis.com/youtube/v3/playlistItems";
+
+    private String prompt = """
+            From now on, generate a list of only 20 tuning forks each based on the English or Korean music titles I give you.\s
+            Instructions:
+             -If I give you an English title, generate 20 candidate Korean tuning for me.\s
+            -If I give you a Korean title, generate 20 English translation candidates.\s
+            -Each candidate should be as close to the standard pronunciation as possible, with no duplicates and as natural as possible.\s
+            -Number each list to separate them.\s
+            -Please arrange them in a similar order to the standard phonetic transcription.\s
+            -Prioritize cases that differ only in vowels.
+            """;
+    @Autowired
+    private RestTemplate getRestTemplate;
 
     public YoutubeSongDTO getYoutubeSong(String youtubeURL, long quizId) {
         String videoId = extractYoutubeVideoId(youtubeURL);
@@ -235,6 +258,62 @@ public class SongService {
         }
 
         return youtubeSongDTOList;
+    }
+
+    public List<String> getAnswerFromGPT(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(quizSongRelation == null){
+            return null;
+        }
+        String songTitle = quizSongRelation.getSongEntity().getSongName();
+        String updatedPrompt = prompt + "The title is " + songTitle;
+
+        // response_format 설정
+        Map<String, Object> responseFormat = new HashMap<>();
+        responseFormat.put("type", "json_schema");
+        responseFormat.put("json_schema", Map.of(
+                "name", "answer_schema",
+                "schema", Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "answer", Map.of(
+                                        "description", "The answers that appears in the input",
+                                        "type", "array",
+                                        "items", Map.of("type", "string")
+                                )
+                        ),
+                        "required", List.of("answer"),
+                        "additionalProperties", false
+                )
+        ));
+
+        GPTRequest gptRequest = new GPTRequest(model, updatedPrompt, responseFormat);
+        Map<String, Object> gptResponse = getRestTemplate.postForObject(apiURL, gptRequest, Map.class);
+
+        //System.out.println(gptResponse);
+
+        try {
+            // 응답 구조에서 answer 추출
+            if (gptResponse != null) {
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) gptResponse.get("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                    if (message != null && message.containsKey("content")) {
+                        // content를 JSON으로 파싱
+                        Map<String, Object> content = new ObjectMapper().readValue((String) message.get("content"), Map.class);
+                        if (content.containsKey("answer")) {
+                            return (List<String>) content.get("answer");
+                        }
+                    }
+                }
+            }else{
+                return null;
+            }
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+            return null;
+        }
+        return null;
     }
 
     private String extractYoutubeVideoId(String youtubeURL) {

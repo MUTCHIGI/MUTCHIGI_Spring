@@ -48,6 +48,7 @@ public class SongController {
     }
 
     @GetMapping("/youtube/songList")
+    @Operation(summary = "해당 Quiz의 노래들을 반환하는 API")
     public ResponseEntity<List<YoutubeSongDTO>> getYoutubeSongList(
             @RequestParam long quizId
     ){
@@ -134,6 +135,13 @@ public class SongController {
                 .body(songService.saveHintList(hintDTOList, qsRelationId));
     }
 
+    @GetMapping("/youtube/{qsRelationId}/answers")
+    @Operation(summary = "단순히 DB에서 제목만 가져와서 이를 GPT에 정답을 요청한 것")
+    public ResponseEntity<List<String>> getYoutbueAnswerFromGPT(
+            @PathVariable long qsRelationId
+    ){
+        return ResponseEntity.ok(songService.getAnswerFromGPT(qsRelationId));
+    }
 
 
 }
