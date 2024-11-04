@@ -3,9 +3,7 @@ package com.CAUCSD.MUTCHIGI.quiz;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -105,6 +102,15 @@ public class QuizController {
             return ResponseEntity.status(HttpStatus.SC_NOT_IMPLEMENTED).build();
         }
         return ResponseEntity.status(HttpStatus.SC_CREATED).body(createdQuiz.getQuizId());
+    }
+
+    @PostMapping(value = "/setReady/{quizId}")
+    @Operation(summary = "여기서 최종적으로 Ready된 Quiz만 조회가능하도록 로직이 변경됨")
+    public ResponseEntity<Long> setQuizToReady(
+            @PathVariable long quizId
+    ){
+
+        return ResponseEntity.status(HttpStatus.SC_OK).body(quizService.setQuizToReadyInDB(quizId));
     }
 
     @PostMapping(value = "/createQuiz/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

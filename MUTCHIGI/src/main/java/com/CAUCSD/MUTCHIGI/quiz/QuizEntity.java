@@ -54,6 +54,8 @@ public class QuizEntity {
     private int instrumentId;
     // Instrument Enum Id 저장
 
+    private boolean readyToPlay;
+
     @ManyToOne
     @JoinColumn(name = "quizAuthorId", referencedColumnName = "userId")
     private UserEntity user;

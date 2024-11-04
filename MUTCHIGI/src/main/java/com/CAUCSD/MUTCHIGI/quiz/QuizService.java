@@ -58,13 +58,13 @@ public class QuizService {
         //전체 조회
         // 조회 조건에 따라 적절한 메소드 호출
         if (modId == 0 && typeId == 0) {
-            quizEntities = quizRepository.findByQuizNameContaining(quizTitle, pageRequest);
+            quizEntities = quizRepository.findByQuizNameContainingAndReadyToPlayTrue(quizTitle, pageRequest);
         } else if (modId == 0) {
-            quizEntities = quizRepository.findByQuizNameContainingAndTypeId(quizTitle, typeId, pageRequest);
+            quizEntities = quizRepository.findByQuizNameContainingAndTypeIdAndReadyToPlayTrue(quizTitle, typeId, pageRequest);
         } else if (typeId == 0) {
-            quizEntities = quizRepository.findByQuizNameContainingAndModId(quizTitle, modId, pageRequest);
+            quizEntities = quizRepository.findByQuizNameContainingAndModIdAndReadyToPlayTrue(quizTitle, modId, pageRequest);
         } else {
-            quizEntities = quizRepository.findByQuizNameContainingAndTypeIdAndModId(quizTitle, typeId, modId, pageRequest);
+            quizEntities = quizRepository.findByQuizNameContainingAndTypeIdAndModIdAndReadyToPlayTrue(quizTitle, typeId, modId, pageRequest);
         }
 
         return quizEntities.stream()
@@ -127,6 +127,7 @@ public class QuizService {
         quizEntity.setSongPlayTime(songPlayTime);
         quizEntity.setUseDisAlg(quizDTO.isUseDisAlg());
         quizEntity.setInstrumentId(quizDTO.getInstrumentId());
+        quizEntity.setReadyToPlay(false);
 
         UserEntity user = userRepository.findById(quizDTO.getUserId()).orElse(null);
 
@@ -137,6 +138,16 @@ public class QuizService {
         quizEntity.setUser(user);
 
         return quizRepository.save(quizEntity);
+    }
+
+    public Long setQuizToReadyInDB(long QuizId){
+        QuizEntity quizEntity = quizRepository.findById(QuizId).orElse(null);
+        if(quizEntity == null){
+            return null;
+        }
+        quizEntity.setReadyToPlay(true);
+        quizRepository.save(quizEntity);
+        return quizEntity.getQuizId();
     }
 
     public String saveThumbnailURL(MultipartFile file, long quizId) throws IOException {

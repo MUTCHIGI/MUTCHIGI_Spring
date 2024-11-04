@@ -9,18 +9,18 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QuizRepository extends JpaRepository<QuizEntity, Long> {
     // 모든 조건이 포함된 메소드
-    Page<QuizEntity> findByQuizNameContainingAndTypeIdAndModId(
+    Page<QuizEntity> findByQuizNameContainingAndTypeIdAndModIdAndReadyToPlayTrue(
             String quizTitle, Integer typeId, Integer modId, Pageable pageable);
 
     // modId가 null인 경우
-    Page<QuizEntity> findByQuizNameContainingAndTypeId(
+    Page<QuizEntity> findByQuizNameContainingAndTypeIdAndReadyToPlayTrue(
             String quizTitle, Integer typeId, Pageable pageable);
 
     // typeId가 null인 경우
-    Page<QuizEntity> findByQuizNameContainingAndModId(
+    Page<QuizEntity> findByQuizNameContainingAndModIdAndReadyToPlayTrue(
             String quizTitle, Integer modId, Pageable pageable);
 
     // typeId와 modId가 모두 null인 경우
-    Page<QuizEntity> findByQuizNameContaining(
+    Page<QuizEntity> findByQuizNameContainingAndReadyToPlayTrue(
             String quizTitle, Pageable pageable);
 }
