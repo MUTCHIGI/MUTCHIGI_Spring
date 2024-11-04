@@ -3,9 +3,7 @@ package com.CAUCSD.MUTCHIGI.song;
 import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.*;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
@@ -52,6 +50,9 @@ public class SongService {
 
     @Autowired
     private HintRepository hintRepository;
+
+    @Autowired
+    private HintStateRepository hintStateRepository;
 
     @Value("${openai.model}")
     private String model;
@@ -210,10 +211,22 @@ public class SongService {
 
     }
 
+    public LocalTime getStartTime(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(quizSongRelation == null){
+            return null;
+        }
+        return quizSongRelation.getStartTime();
+    }
+
     public Integer getHintCountFromDB(long quizId){
         QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        List<HintStateEntity> hintStateEntityList = hintStateRepository.findByQuizEntity(quizEntity);
 
-        return quizEntity.getHintCount();
+        quizEntity.setHintCount(hintStateEntityList.size());
+        quizRepository.save(quizEntity);
+
+        return hintStateEntityList.size();
     }
 
     public List<Long> saveHintList(List<HintDTO> hintDTOList, long qsRelationId){
@@ -221,10 +234,12 @@ public class SongService {
 
         for(HintDTO hintDTO : hintDTOList){
             HintEntity hintEntity = new HintEntity();
-            LocalTime hintTime = LocalTime.of(hintDTO.getHour(), hintDTO.getMinute(), hintDTO.getSecond());
+            HintStateEntity hintStateEntity = hintStateRepository.findById(hintDTO.getHintStateId()).orElse(null);
+
+            LocalTime hintTime = hintStateEntity.getHintTime();
 
             hintEntity.setHintTime(hintTime);
-            hintEntity.setHintType(hintDTO.getHintType());
+            hintEntity.setHintType(hintStateEntity.getHintType());
             hintEntity.setHintText(hintDTO.getHintText());
             hintEntity.setQuizSongRelation(quizSongRelationRepository.findById(qsRelationId).orElse(null));
             hintEntity = hintRepository.save(hintEntity);
@@ -232,6 +247,21 @@ public class SongService {
             hintIdList.add(hintEntity.getHintId());
         }
         return hintIdList;
+    }
+
+    public List<GetHintDTO> getHintList(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        List<HintEntity> hintEntities = hintRepository.findByQuizSongRelation(quizSongRelation);
+        List<GetHintDTO> hintDTOList = new ArrayList<>();
+        for(HintEntity hintEntity : hintEntities){
+            GetHintDTO getHintDTO = new GetHintDTO();
+            getHintDTO.setHintType(hintEntity.getHintType());
+            getHintDTO.setHintText(hintEntity.getHintText());
+            getHintDTO.setHintId(hintEntity.getHintId());
+            getHintDTO.setHintTime(hintEntity.getHintTime());
+            hintDTOList.add(getHintDTO);
+        }
+        return hintDTOList;
     }
 
 
@@ -348,6 +378,7 @@ public class SongService {
 
         return gptAnswers;
     }
+
 
     private String extractYoutubeVideoId(String youtubeURL) {
         String regex = "(?<=v=|/|be/)([a-zA-Z0-9_-]{11})";

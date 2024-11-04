@@ -18,9 +18,6 @@ public class QuizDTO {
     @Schema(description = "모드 ID")
     private int modId;
 
-    @Schema(description = "힌트 개수")
-    private int hintCount;
-
     @Schema(description = "퀴즈 플레이 시간 (시간)")
     private int hour;
 

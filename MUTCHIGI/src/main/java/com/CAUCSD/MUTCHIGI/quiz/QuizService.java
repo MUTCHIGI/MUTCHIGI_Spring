@@ -1,34 +1,30 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
+import com.CAUCSD.MUTCHIGI.quizSong.hint.GetHintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateEntity;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.net.MalformedURLException;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -36,6 +32,9 @@ public class QuizService {
 
     @Autowired
     private QuizRepository quizRepository;
+
+    @Autowired
+    private HintStateRepository hintStateRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -123,7 +122,6 @@ public class QuizService {
         quizEntity.setUserPlayCount(0);
         quizEntity.setTypeId(quizDTO.getTypeId());
         quizEntity.setModId(quizDTO.getModId());
-        quizEntity.setHintCount(quizDTO.getHintCount());
         quizEntity.setSongPlayTime(songPlayTime);
         quizEntity.setUseDisAlg(quizDTO.isUseDisAlg());
         quizEntity.setInstrumentId(quizDTO.getInstrumentId());
@@ -177,6 +175,44 @@ public class QuizService {
         file.transferTo(thumbnailFile);
 
         return fileName;
+    }
+
+    public List<Long> setYoutbueHintStateToDB(List<HintStateDTO> hintStateDTOList, long quizId){
+        QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        if(quizEntity == null){
+            return null;
+        }
+
+        List<Long> hintIdList = new ArrayList<>();
+        for(HintStateDTO hintStateDTO : hintStateDTOList){
+            HintStateEntity hintStateEntity = new HintStateEntity();
+            hintStateEntity.setQuizEntity(quizEntity);
+            hintStateEntity.setHintType(hintStateDTO.getHintType());
+            hintStateEntity.setHintTime(LocalTime.of(hintStateDTO.getHour(), hintStateDTO.getMinute(), hintStateDTO.getSecond()));
+
+            hintStateEntity = hintStateRepository.save(hintStateEntity);
+            hintIdList.add(hintStateEntity.getHintStateId());
+        }
+
+        return hintIdList;
+    }
+
+    public List<GetHintStateDTO> getHintStateByHintId(long quizId){
+        QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        if(quizEntity == null){
+            return null;
+        }
+
+        List<GetHintStateDTO> getHintStateDTOList = new ArrayList<>();
+        List<HintStateEntity> hintStateEntityList = hintStateRepository.findByQuizEntity(quizEntity);
+        for(HintStateEntity hintStateEntity : hintStateEntityList){
+            GetHintStateDTO getHintStateDTO = new GetHintStateDTO();
+            getHintStateDTO.setHintType(hintStateEntity.getHintType());
+            getHintStateDTO.setHintTime(hintStateEntity.getHintTime());
+            getHintStateDTO.setHintStateId(getHintStateDTO.getHintStateId());
+            getHintStateDTOList.add(getHintStateDTO);
+        }
+        return getHintStateDTOList;
     }
 
     // 이미지 리사이즈 메서드

@@ -1,5 +1,8 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
+import com.CAUCSD.MUTCHIGI.quizSong.hint.GetHintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,5 +139,25 @@ public class QuizController {
         }catch(IOException e){
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PostMapping("/{quizId}/hintState")
+    @Operation(summary = "퀴즈 저장직후 hint갯수와 상태 관리함")
+    public ResponseEntity<List<Long>> setYoutbueHintState(
+            @PathVariable long quizId,
+            @RequestBody List<HintStateDTO> hintStateDTOList
+
+    ){
+        return ResponseEntity
+                .ok()
+                .body(quizService.setYoutbueHintStateToDB(hintStateDTOList, quizId));
+    }
+
+    @GetMapping("/{quizId}/hintState")
+    @Operation(summary = "퀴즈 저장직후 hint 상태 가져오기")
+    public ResponseEntity<List<GetHintStateDTO>> getYoutbueHintStateFromDB(
+            @PathVariable long quizId
+    ){
+        return ResponseEntity.ok(quizService.getHintStateByHintId(quizId));
     }
 }

@@ -41,7 +41,7 @@ public class SecurityConfig{
                         .requestMatchers( "/token", "/authTest/google").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll() // 정적 리소스 허용
-                        .requestMatchers("/room/**" ,"/room/idList", "/room/Entities" ).permitAll()
+                        .requestMatchers("/room/**" ,"/room/idList", "/room/Entities" , "/quiz/images/**").permitAll() // 메인 화면 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
