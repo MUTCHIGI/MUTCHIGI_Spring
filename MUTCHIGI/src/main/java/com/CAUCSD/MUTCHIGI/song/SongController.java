@@ -1,7 +1,7 @@
 package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +48,7 @@ public class SongController {
     }
 
     @GetMapping("/youtube/songList")
+    @Operation(summary = "해당 Quiz의 노래들을 반환하는 API")
     public ResponseEntity<List<YoutubeSongDTO>> getYoutubeSongList(
             @RequestParam long quizId
     ){
@@ -94,6 +95,16 @@ public class SongController {
                 .body(songService.saveStartTime(startTime, qsRelationId));
     }
 
+    @GetMapping("/youtube/{qsRelationId}/startTime")
+    @Operation(summary = "노래 시작시간 가져오기")
+    public ResponseEntity<LocalTime> getStartTime(
+            @PathVariable long qsRelationId
+    ){
+        return ResponseEntity
+                .ok()
+                .body(songService.getStartTime(qsRelationId));
+    }
+
     @PostMapping("/youtube/{qsRelationId}/answers")
     @Operation(summary = "특정 퀴즈의 특정 노래에 대한 정답 리스트를 전송하는 API", description = "/youtube 도메인에서 제공된 QSRelationId를 PathVariable로 담아 전송")
     public ResponseEntity<List<Long>> addYoutbueAnswer(
@@ -134,6 +145,22 @@ public class SongController {
                 .body(songService.saveHintList(hintDTOList, qsRelationId));
     }
 
+    @GetMapping("/youtube/{qsRelationId}/hint")
+    @Operation(summary = "해당 노래에 포함된 노래에 대한 List<힌트>를 가져오는 API")
+    public ResponseEntity<List<GetHintDTO>> getHintList(
+            @PathVariable long qsRelationId
+    ){
+        return ResponseEntity
+                .ok(songService.getHintList(qsRelationId));
+    }
+
+    @GetMapping("/youtube/{qsRelationId}/answers")
+    @Operation(summary = "단순히 DB에서 제목만 가져와서 이를 GPT에 정답을 요청한 것")
+    public ResponseEntity<List<String>> getYoutbueAnswerFromGPT(
+            @PathVariable long qsRelationId
+    ){
+        return ResponseEntity.ok(songService.getAnswerFromDBwithGPT(qsRelationId));
+    }
 
 
 }

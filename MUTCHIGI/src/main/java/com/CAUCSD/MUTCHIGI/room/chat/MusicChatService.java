@@ -4,6 +4,7 @@ import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintAllDTO;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
@@ -261,22 +262,22 @@ public class MusicChatService {
 
     }
 
-    public List<HintDTO> getHintFromDB(long chatRoomId, long qsRelationId){
+    public List<HintAllDTO> getHintFromDB(long chatRoomId, long qsRelationId){
         QuizSongRelation quizSongRelation = quizSongRelationReopository.findById(qsRelationId).orElse(null);
         if (quizSongRelation != null){
             List<HintEntity> hintList = hintRepository.findByQuizSongRelation(quizSongRelation);
 
-            List<HintDTO> hintDTOS = new ArrayList<>();
+            List<HintAllDTO> hintAllDTOs = new ArrayList<>();
             for(HintEntity hint : hintList){
-                HintDTO hintDTO = new HintDTO();
-                hintDTO.setHintText(hint.getHintText());
-                hintDTO.setHintType(hint.getHintType());
-                hintDTO.setHour(hint.getHintTime().getHour());
-                hintDTO.setMinute(hint.getHintTime().getMinute());
-                hintDTO.setSecond(hint.getHintTime().getSecond());
-                hintDTOS.add(hintDTO);
+                HintAllDTO hintAllDTO = new HintAllDTO();
+                hintAllDTO.setHintText(hint.getHintText());
+                hintAllDTO.setHintType(hint.getHintType());
+                hintAllDTO.setHour(hint.getHintTime().getHour());
+                hintAllDTO.setMinute(hint.getHintTime().getMinute());
+                hintAllDTO.setSecond(hint.getHintTime().getSecond());
+                hintAllDTOs.add(hintAllDTO);
             }
-            return hintDTOS;
+            return hintAllDTOs;
         }else{
             return null;
         }

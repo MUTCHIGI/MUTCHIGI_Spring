@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.room.chat;
 
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintAllDTO;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
 import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
@@ -67,7 +68,7 @@ public class MusicChatController {
 
     @MessageMapping("/getHint/{chatRoomId}/{qsRelationId}")
     @SendTo("/topic/hint/{chatRoomId}")
-    public List<HintDTO> getHint(
+    public List<HintAllDTO> getHint(
             @DestinationVariable long chatRoomId,
             @DestinationVariable long qsRelationId
     ){

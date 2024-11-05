@@ -1,11 +1,12 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
+import com.CAUCSD.MUTCHIGI.quizSong.hint.GetHintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateDTO;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -107,6 +107,15 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.SC_CREATED).body(createdQuiz.getQuizId());
     }
 
+    @PostMapping(value = "/setReady/{quizId}")
+    @Operation(summary = "여기서 최종적으로 Ready된 Quiz만 조회가능하도록 로직이 변경됨")
+    public ResponseEntity<Long> setQuizToReady(
+            @PathVariable long quizId
+    ){
+
+        return ResponseEntity.status(HttpStatus.SC_OK).body(quizService.setQuizToReadyInDB(quizId));
+    }
+
     @PostMapping(value = "/createQuiz/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "quiz 업로드(image 제외)")
     public ResponseEntity<Long> createQuizImage(
@@ -130,5 +139,25 @@ public class QuizController {
         }catch(IOException e){
             return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PostMapping("/{quizId}/hintState")
+    @Operation(summary = "퀴즈 저장직후 hint갯수와 상태 관리함")
+    public ResponseEntity<List<Long>> setYoutbueHintState(
+            @PathVariable long quizId,
+            @RequestBody List<HintStateDTO> hintStateDTOList
+
+    ){
+        return ResponseEntity
+                .ok()
+                .body(quizService.setYoutbueHintStateToDB(hintStateDTOList, quizId));
+    }
+
+    @GetMapping("/{quizId}/hintState")
+    @Operation(summary = "퀴즈 저장직후 hint 상태 가져오기")
+    public ResponseEntity<List<GetHintStateDTO>> getYoutbueHintStateFromDB(
+            @PathVariable long quizId
+    ){
+        return ResponseEntity.ok(quizService.getHintStateByHintId(quizId));
     }
 }

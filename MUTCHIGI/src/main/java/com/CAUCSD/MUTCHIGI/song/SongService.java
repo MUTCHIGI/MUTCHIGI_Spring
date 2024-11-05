@@ -2,17 +2,15 @@ package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintEntity;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.answer.*;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
-import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
-import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +21,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +51,17 @@ public class SongService {
     @Autowired
     private HintRepository hintRepository;
 
+    @Autowired
+    private HintStateRepository hintStateRepository;
+
+    @Value("${openai.model}")
+    private String model;
+
+    @Value("${openai.api.url}")
+    private String apiURL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("${youtube.api,key}")
     private String youtubeAPIKey;
@@ -58,6 +69,19 @@ public class SongService {
     private String baseYoutubeURL = "https://www.googleapis.com/youtube/v3/videos";
 
     private String baseYoutubeListURL = "https://www.googleapis.com/youtube/v3/playlistItems";
+
+    private String prompt = """
+            From now on, generate a list of only 20 tuning forks each based on the English or Korean music titles I give you.\s
+            Instructions:
+             -If I give you an English title, generate 20 candidate Korean tuning for me.\s
+            -If I give you a Korean title, generate 20 English translation candidates.\s
+            -Each candidate should be as close to the standard pronunciation as possible, with no duplicates and as natural as possible.\s
+            -Number each list to separate them.\s
+            -Please arrange them in a similar order to the standard phonetic transcription.\s
+            -Prioritize cases that differ only in vowels.
+            """;
+    @Autowired
+    private RestTemplate getRestTemplate;
 
     public YoutubeSongDTO getYoutubeSong(String youtubeURL, long quizId) {
         String videoId = extractYoutubeVideoId(youtubeURL);
@@ -142,22 +166,35 @@ public class SongService {
     public List<Long> saveYoutubeAnswer(List<String> answerList, long qsRelationId){
         List<Long> idList = new ArrayList<>();
 
-        for(String answer : answerList){
-            AnswerEntity answerEntity = new AnswerEntity();
-            QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
-            if(quizSongRelation == null){
-                return null;
-            }
-            answerEntity.setAnswer(answer);
-            answerEntity.setQuizSongRelation(quizSongRelation);
-            answerEntity.setLLMUsed(false);
-            answerEntity = answerRepository.save(answerEntity);
-            idList.add(answerEntity.getAnswerId());
-        }
+        // QuizSongRelation 조회
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId)
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 QuizSongRelation이 존재하지 않습니다."));
 
-        if(idList.size() > 20){
+        // AnswerEntity 목록 조회
+        List<AnswerEntity> answerEntityList = answerRepository.findByQuizSongRelation(quizSongRelation);
+
+        // answerList의 크기 검증
+        if (answerList.size() > 20) {
             throw new IllegalArgumentException("답변 목록의 크기가 20을 초과할 수 없습니다.");
         }
+
+        // 각 AnswerEntity에 대해 답변 세팅
+        for (int i = 0; i < answerEntityList.size() && i < answerList.size(); i++) {
+            AnswerEntity getDBAnswerEntity = answerEntityList.get(i);
+            getDBAnswerEntity.setAnswer(answerList.get(i));
+            getDBAnswerEntity.setLLMUsed(false);
+            idList.add(getDBAnswerEntity.getAnswerId());
+        }
+
+        // 남아 있는 AnswerEntity 제거
+        if (answerList.size() < answerEntityList.size()) {
+            for (int i = answerList.size(); i < answerEntityList.size(); i++) {
+                answerRepository.delete(answerEntityList.get(i)); // 삭제
+            }
+        }
+
+        answerRepository.saveAll(answerEntityList.subList(0, answerList.size()));
+
         return idList;
     }
 
@@ -174,10 +211,22 @@ public class SongService {
 
     }
 
+    public LocalTime getStartTime(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(quizSongRelation == null){
+            return null;
+        }
+        return quizSongRelation.getStartTime();
+    }
+
     public Integer getHintCountFromDB(long quizId){
         QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        List<HintStateEntity> hintStateEntityList = hintStateRepository.findByQuizEntity(quizEntity);
 
-        return quizEntity.getHintCount();
+        quizEntity.setHintCount(hintStateEntityList.size());
+        quizRepository.save(quizEntity);
+
+        return hintStateEntityList.size();
     }
 
     public List<Long> saveHintList(List<HintDTO> hintDTOList, long qsRelationId){
@@ -185,10 +234,12 @@ public class SongService {
 
         for(HintDTO hintDTO : hintDTOList){
             HintEntity hintEntity = new HintEntity();
-            LocalTime hintTime = LocalTime.of(hintDTO.getHour(), hintDTO.getMinute(), hintDTO.getSecond());
+            HintStateEntity hintStateEntity = hintStateRepository.findById(hintDTO.getHintStateId()).orElse(null);
+
+            LocalTime hintTime = hintStateEntity.getHintTime();
 
             hintEntity.setHintTime(hintTime);
-            hintEntity.setHintType(hintDTO.getHintType());
+            hintEntity.setHintType(hintStateEntity.getHintType());
             hintEntity.setHintText(hintDTO.getHintText());
             hintEntity.setQuizSongRelation(quizSongRelationRepository.findById(qsRelationId).orElse(null));
             hintEntity = hintRepository.save(hintEntity);
@@ -196,6 +247,21 @@ public class SongService {
             hintIdList.add(hintEntity.getHintId());
         }
         return hintIdList;
+    }
+
+    public List<GetHintDTO> getHintList(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        List<HintEntity> hintEntities = hintRepository.findByQuizSongRelation(quizSongRelation);
+        List<GetHintDTO> hintDTOList = new ArrayList<>();
+        for(HintEntity hintEntity : hintEntities){
+            GetHintDTO getHintDTO = new GetHintDTO();
+            getHintDTO.setHintType(hintEntity.getHintType());
+            getHintDTO.setHintText(hintEntity.getHintText());
+            getHintDTO.setHintId(hintEntity.getHintId());
+            getHintDTO.setHintTime(hintEntity.getHintTime());
+            hintDTOList.add(getHintDTO);
+        }
+        return hintDTOList;
     }
 
 
@@ -236,6 +302,83 @@ public class SongService {
 
         return youtubeSongDTOList;
     }
+
+    public List<String> getAnswerFromDBwithGPT(long qsRelationId){
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(quizSongRelation == null){
+            return null;
+        }
+        List<AnswerEntity> answerEntityList = answerRepository.findByQuizSongRelation(quizSongRelation);
+        List<String> gptAnswers = new ArrayList<>();
+        if(answerEntityList.isEmpty()){
+            String songTitle = quizSongRelation.getSongEntity().getSongName();
+            String updatedPrompt = prompt + "The title is " + songTitle;
+
+            // response_format 설정
+            Map<String, Object> responseFormat = new HashMap<>();
+            responseFormat.put("type", "json_schema");
+            responseFormat.put("json_schema", Map.of(
+                    "name", "answer_schema",
+                    "schema", Map.of(
+                            "type", "object",
+                            "properties", Map.of(
+                                    "answer", Map.of(
+                                            "description", "The answers that appears in the input",
+                                            "type", "array",
+                                            "items", Map.of("type", "string")
+                                    )
+                            ),
+                            "required", List.of("answer"),
+                            "additionalProperties", false
+                    )
+            ));
+
+            GPTRequest gptRequest = new GPTRequest(model, updatedPrompt, responseFormat);
+            Map<String, Object> gptResponse = getRestTemplate.postForObject(apiURL, gptRequest, Map.class);
+
+            //System.out.println(gptResponse);
+
+            try {
+                // 응답 구조에서 answer 추출
+                if (gptResponse != null) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) gptResponse.get("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                        if (message != null && message.containsKey("content")) {
+                            // content를 JSON으로 파싱
+                            Map<String, Object> content = new ObjectMapper().readValue((String) message.get("content"), Map.class);
+                            if (content.containsKey("answer")) {
+                                gptAnswers.addAll ((List<String>) content.get("answer"));
+                            }
+                        }
+                    }
+                    List<AnswerEntity> gptAnswerEntityList = new ArrayList<>();
+                    for(String answer : gptAnswers){
+                        AnswerEntity answerEntity = new AnswerEntity();
+                        answerEntity.setAnswer(answer);
+                        answerEntity.setLLMUsed(true);
+                        answerEntity.setQuizSongRelation(quizSongRelation);
+                        gptAnswerEntityList.add(answerEntity);
+                    }
+                    answerRepository.saveAll(gptAnswerEntityList);
+
+
+                }else{
+                    return null;
+                }
+            }catch (JsonProcessingException e){
+                e.printStackTrace();
+                return null;
+            }
+        }else{
+            for(AnswerEntity answerEntity : answerEntityList){
+                gptAnswers.add(answerEntity.getAnswer());
+            }
+        }
+
+        return gptAnswers;
+    }
+
 
     private String extractYoutubeVideoId(String youtubeURL) {
         String regex = "(?<=v=|/|be/)([a-zA-Z0-9_-]{11})";

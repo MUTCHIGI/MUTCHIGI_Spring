@@ -5,8 +5,9 @@ import lombok.Data;
 import java.time.LocalTime;
 
 @Data
-public class HintDTO {
+public class GetHintStateDTO {
 
     private long hintStateId;
-    private String hintText;
+    private LocalTime hintTime;
+    private String hintType;
 }
