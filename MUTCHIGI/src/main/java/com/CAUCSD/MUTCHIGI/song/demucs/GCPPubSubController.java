@@ -46,6 +46,24 @@ public class GCPPubSubController {
                 .body(resource);
     }
 
+    @GetMapping("/DemucsSong/play/inRoom")
+    @Operation(summary = "STOMP에서 악기분리된 노래를 듣는 Inline을 보내는 API, 스웨거에서는 실행 안됨")
+    public ResponseEntity<InputStreamResource> playDemucsSongFileInRoom(
+            @RequestParam long qsRelationId
+    ) throws IOException {
+
+        FileInputStream fileInputStream = gcpPubSubService.playDemucsSongInRoom(qsRelationId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION,  "inline; filename=demucs_" + qsRelationId +  ".mp3");
+
+        InputStreamResource resource = new InputStreamResource(fileInputStream);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.valueOf("audio/mpeg"))
+                .contentLength(fileInputStream.getChannel().size())
+                .body(resource);
+    }
+
     @GetMapping("/DemucsSong/List")
     @Operation(summary = "기존 변환된 노래들 offset에 따라 정해서 가져오는 API")
     public ResponseEntity<List<DemucsSongDTO>> listDemucsSong(

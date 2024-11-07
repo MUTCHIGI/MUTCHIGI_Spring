@@ -176,6 +176,42 @@ public class GCPPubSubService {
         return new FileInputStream(file);
     }
 
+    public FileInputStream playDemucsSongInRoom(long qsRelationId) throws IOException {
+        QuizSongRelation quizSongRelation = quizSongRelationRepository.findById(qsRelationId).orElse(null);
+        if(quizSongRelation == null){
+            return null;
+        }
+        int instrumentId = quizSongRelation.getQuizEntity().getInstrumentId();
+        long songId = quizSongRelation.getQuizEntity().getQuizId();
+
+        String intrumentName ="";
+        switch (instrumentId){
+            case 1 :
+                intrumentName = "vocals";
+                break;
+            case 2 :
+                intrumentName = "bass";
+                break;
+            case 3 :
+                intrumentName = "no_vocals";
+                break;
+            case 4 :
+                intrumentName = "drums";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid instrumentId: " + instrumentId);
+        }
+        String filePath = "C:\\demucsFile\\" + songId + "_" + intrumentName + ".mp3";
+        File file = new File(filePath);
+
+        // 파일이 존재하는지 체크
+        if (!file.exists()) {
+            throw new FileNotFoundException("File not found: " + filePath);
+        }
+
+        return new FileInputStream(file);
+    }
+
     public List<DemucsSongDTO> getListDemucsSong(int page, int offset, String songTitle){
         PageRequest pageRequest = PageRequest.of(page, offset, Sort.by("convertOrderDate").descending());
 
