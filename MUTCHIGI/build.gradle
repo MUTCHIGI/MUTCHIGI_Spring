@@ -4,9 +4,6 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.6'
 }
 
-ext {
-	springCloudGcpVersion = "5.7.0"
-}
 
 group = 'com.CAUCSD'
 version = '0.0.1-SNAPSHOT'
@@ -35,7 +32,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.google.cloud:spring-cloud-gcp-starter-pubsub'
-	implementation 'com.google.cloud:spring-cloud-gcp-starter-pubsub'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -61,7 +57,8 @@ dependencies {
 
 dependencyManagement {
 	imports {
-		mavenBom "com.google.cloud:spring-cloud-gcp-dependencies:$springCloudGcpVersion"
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.2"
+		mavenBom "com.google.cloud:spring-cloud-gcp-dependencies:5.7.0"
 	}
 }
 

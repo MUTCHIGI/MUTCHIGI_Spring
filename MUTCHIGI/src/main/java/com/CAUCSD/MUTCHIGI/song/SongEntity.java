@@ -1,12 +1,11 @@
 package com.CAUCSD.MUTCHIGI.song;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.CAUCSD.MUTCHIGI.user.UserEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Setter
@@ -27,4 +26,14 @@ public class SongEntity {
     private LocalTime songTime;
 
     private String thumbnailURL;
+
+    private boolean demucsCompleted;
+
+    private LocalDate convertOrderDate;
+
+    private String messageId;
+
+    @ManyToOne
+    @JoinColumn(name = "demucsOrderUserId", referencedColumnName = "userId")
+    private UserEntity user;
 }

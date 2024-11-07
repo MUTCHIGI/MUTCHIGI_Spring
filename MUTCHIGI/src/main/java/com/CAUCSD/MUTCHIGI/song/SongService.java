@@ -471,6 +471,7 @@ public class SongService {
                 songEntity.setPlayURL("https://www.youtube.com/watch?v=" + itemNode.path("id").asText());
                 songEntity.setThumbnailURL(itemNode.path("snippet").path("thumbnails").path("standard").path("url").asText());
                 songEntity.setSongTime(durationToLocalTime(duration));
+                songEntity.setDemucsCompleted(false);
                 songEntity = songRepository.save(songEntity);
             }
 
