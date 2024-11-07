@@ -1,5 +1,9 @@
 package com.CAUCSD.MUTCHIGI.song.demucs;
 
+import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
+import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.song.SongEntity;
 import com.CAUCSD.MUTCHIGI.song.SongRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
@@ -37,7 +41,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class GCPPubSubService {
@@ -53,6 +56,12 @@ public class GCPPubSubService {
 
     @Autowired
     private SingerRepository singerRepository;
+
+    @Autowired
+    private QuizRepository quizRepository;
+
+    @Autowired
+    private QuizSongRelationReopository quizSongRelationRepository;
 
     @Autowired
     private SingerSongRelationRepository singerSongRelationRepository;
@@ -170,7 +179,7 @@ public class GCPPubSubService {
     public List<DemucsSongDTO> getListDemucsSong(int page, int offset, String songTitle){
         PageRequest pageRequest = PageRequest.of(page, offset, Sort.by("convertOrderDate").descending());
 
-        Page<SongEntity> songEntityPage = songRepository.findBySongNameContainingAAndDemucsCompletedTrue(songTitle, pageRequest);
+        Page<SongEntity> songEntityPage = songRepository.findBySongNameContainingAndDemucsCompletedIsTrue(songTitle, pageRequest);
 
         return songEntityPage.getContent().stream()
                 .map(songEntity -> {
@@ -195,7 +204,7 @@ public class GCPPubSubService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         UserEntity userEntity = userRepository.findByEmail(email);
-        List<SongEntity> songEntities = songRepository.findSongEntitiesByUser(userEntity);
+        List<SongEntity> songEntities = songRepository.findSongEntitiesByUserAndDemucsCompletedIsFalse(userEntity);
 
         return songEntities.stream().map(
                 songEntity -> {
@@ -209,10 +218,28 @@ public class GCPPubSubService {
                     myDemucsSongDTO.setPlayURL(songEntity.getPlayURL());
                     myDemucsSongDTO.setThumbnailURL(songEntity.getThumbnailURL());
                     myDemucsSongDTO.setSongTime(songEntity.getSongTime());
-
-                    myDemucsSongDTO.setSongTime(songEntity.getSongTime());
+                    myDemucsSongDTO.setMessageId(songEntity.getMessageId());
+                    myDemucsSongDTO.setDemucsCompleted(songEntity.isDemucsCompleted());
+                    return myDemucsSongDTO;
                 }
-        )
+        ).toList();
+    }
+
+    public List<Long> assignSongToQuizinDB(List<Long> songIds, long quizId){
+        List<SongEntity> songEntities = songRepository.findAllById(songIds);
+        QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        if(quizEntity == null){
+            return null;
+        }
+        List<Long> qsRelationIdList = new ArrayList<>();
+        for (SongEntity songEntity : songEntities) {
+            QuizSongRelation quizSongRelation = new QuizSongRelation();
+            quizSongRelation.setQuizEntity(quizEntity);
+            quizSongRelation.setSongEntity(songEntity);
+            quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
+            qsRelationIdList.add(quizSongRelation.getQSRelationId());
+        }
+        return qsRelationIdList;
     }
 
 
@@ -251,17 +278,26 @@ public class GCPPubSubService {
             String songId = messageData.getSong_id();
             String baseDownloadUrl = "http://35.216.6.4:5843";
 
-            // 다운로드 및 저장
-            for (Map.Entry<String, String> entry : downloadLinks.entrySet()) {
-                String linkType = entry.getKey();  // 예: no_vocals, vocals, drums, bass
-                String fileUrl = baseDownloadUrl +encodeUrl(entry.getValue()); // 실제 파일 URL
+            SongEntity songEntity = songRepository.findById(Long.parseLong(songId)).orElse(null);
+            if(songEntity != null){
 
-                System.out.println("Download type: " + linkType + " | URL: " + fileUrl);
 
-                String destinationPath = "C:/demucsFile/" + songId + "_" + linkType + ".mp3";
-                // 파일 다운로드 함수 호출
-                downloadFile(fileUrl, destinationPath);
+                // 다운로드 및 저장
+                for (Map.Entry<String, String> entry : downloadLinks.entrySet()) {
+                    String linkType = entry.getKey();  // 예: no_vocals, vocals, drums, bass
+                    String fileUrl = baseDownloadUrl +encodeUrl(entry.getValue()); // 실제 파일 URL
+
+                    System.out.println("Download type: " + linkType + " | URL: " + fileUrl);
+
+                    String destinationPath = "C:/demucsFile/" + songId + "_" + linkType + ".mp3";
+                    // 파일 다운로드 함수 호출
+                    downloadFile(fileUrl, destinationPath);
+                    songEntity.setDemucsCompleted(true);
+                    songRepository.save(songEntity);
+                }
             }
+
+
 
         }catch (Exception e){
             e.printStackTrace();

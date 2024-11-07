@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface SongRepository extends JpaRepository<SongEntity, Long> {
     SongEntity findBySongPlatformId(String songPlatformId);
-    Page<SongEntity> findBySongNameContainingAAndDemucsCompletedTrue(String songName, Pageable pageable);
-    List<SongEntity> findSongEntitiesByUser(UserEntity user);
+    Page<SongEntity> findBySongNameContainingAndDemucsCompletedIsTrue(String songName, Pageable pageable);
+    List<SongEntity> findSongEntitiesByUserAndDemucsCompletedIsFalse(UserEntity user);
 }

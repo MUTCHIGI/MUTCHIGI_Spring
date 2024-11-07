@@ -47,6 +47,7 @@ public class GCPPubSubController {
     }
 
     @GetMapping("/DemucsSong/List")
+    @Operation(summary = "기존 변환된 노래들 offset에 따라 정해서 가져오는 API")
     public ResponseEntity<List<DemucsSongDTO>> listDemucsSong(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int offset,
@@ -57,7 +58,20 @@ public class GCPPubSubController {
     }
 
     @GetMapping("/DemucsSong/myOrderList")
-    public ResponseEntity<List<DemucsSongDTO>> myOrderList(){
+    @Operation(summary = "내가 변환한 노래들 중 아직 변환되지 않은 것들 가져오는 API")
+    public ResponseEntity<List<MyDemucsSongDTO>> myOrderList(){
 
+        List<MyDemucsSongDTO> getList = gcpPubSubService.getMyDemucsList();
+        return ResponseEntity.ok(getList);
+    }
+
+    @PostMapping("/DemucsSong/SongToQuiz")
+    @Operation(summary = "노래Id들을 퀴즈에 할당하고 QuizSongRelationId 리스트를 얻는 API")
+    public ResponseEntity<List<Long>> assignSongToQuiz(
+            @RequestParam List<Long> songIds,
+            @RequestParam long quizId
+    ){
+        return ResponseEntity.ok()
+                .body(gcpPubSubService.assignSongToQuizinDB(songIds, quizId));
     }
 }

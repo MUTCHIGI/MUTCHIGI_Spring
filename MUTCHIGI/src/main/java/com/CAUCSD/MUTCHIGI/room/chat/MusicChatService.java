@@ -1,5 +1,6 @@
 package com.CAUCSD.MUTCHIGI.room.chat;
 
+import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
@@ -13,6 +14,8 @@ import com.CAUCSD.MUTCHIGI.room.Member.MemberRepository;
 import com.CAUCSD.MUTCHIGI.room.Member.RoomAuthority;
 import com.CAUCSD.MUTCHIGI.room.RoomEntity;
 import com.CAUCSD.MUTCHIGI.room.RoomRepository;
+import com.CAUCSD.MUTCHIGI.song.SongEntity;
+import com.CAUCSD.MUTCHIGI.song.SongRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
@@ -54,6 +57,8 @@ public class MusicChatService {
 
     @Autowired
     private SingerSongRelationRepository singerSongRelationRepository;
+    @Autowired
+    private SongRepository songRepository;
 
 
     @Autowired
@@ -186,8 +191,14 @@ public class MusicChatService {
         long qsRelationID = getQSRelationIDList.get(songIndex);
         QuizSongRelation quizSongRelation = quizSongRelationReopository.findById(qsRelationID).orElse(null);
         if(quizSongRelation != null){
+            QuizEntity quizEntity = quizSongRelation.getQuizEntity();
+            if(quizEntity.getTypeId() == 2){
+                sendNextSongDTO.setSongURL("");
+            }else{
+                sendNextSongDTO.setSongURL(quizSongRelation.getSongEntity().getPlayURL());
+            }
+
             sendNextSongDTO.setQsRelationId(qsRelationID);
-            sendNextSongDTO.setSongURL(quizSongRelation.getSongEntity().getPlayURL());
             sendNextSongDTO.setOriginalSongURL(quizSongRelation.getSongEntity().getPlayURL());
 
             LocalTime startTime = quizSongRelation.getSongEntity().getSongTime();
@@ -205,7 +216,6 @@ public class MusicChatService {
             simpAttributes.setAttribute("answerList", answerList);
             System.out.println("songIndex Next : " + answerList);
 
-            List<HintEntity> hintList = hintRepository.findByQuizSongRelation(quizSongRelation);
 
 
         }else{
