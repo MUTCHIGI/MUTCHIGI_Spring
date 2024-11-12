@@ -1,6 +1,7 @@
 package com.CAUCSD.MUTCHIGI.room.chat;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizEntity;
+import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
@@ -27,6 +28,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Member;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -47,6 +49,9 @@ public class MusicChatService {
     private RoomRepository roomRepository;
 
     @Autowired
+    private QuizRepository quizRepository;
+
+    @Autowired
     private QuizSongRelationReopository quizSongRelationReopository;
 
     @Autowired
@@ -59,6 +64,7 @@ public class MusicChatService {
     private SingerSongRelationRepository singerSongRelationRepository;
     @Autowired
     private SongRepository songRepository;
+
 
 
     @Autowired
@@ -159,8 +165,18 @@ public class MusicChatService {
         SendNextSongDTO sendNextSongDTO = new SendNextSongDTO();
         SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
 
+        Object userId = simpAttributes.getAttribute("user-id");
+        long userIdLong = -1;
+        if(userId != null) {
+            userIdLong = Long.parseLong(String.valueOf(userId));
+        }
+
         //즉 처음 시작하는 거면 qsRelationList 세션에 저장
         if(songIndex == 0){
+            MemberEntity orderMember = memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(chatRoomId, userIdLong).orElse(null);
+            if(orderMember.getRoomAuthority() == RoomAuthority.SECONDARY){
+               return null;
+            }
             RoomEntity roomEntity = roomRepository.findById(chatRoomId).orElse(null);
             if(roomEntity == null){
                 return null;
@@ -169,7 +185,11 @@ public class MusicChatService {
                     .findByQuizEntity_QuizId(roomEntity.getQuiz().getQuizId());
 
             roomEntity.setParticipateAllowed(false);
+            QuizEntity quizEntity = roomEntity.getQuiz();
+            List<MemberEntity> memberEntities = memberRepository.findByRoomEntity_RoomId(roomEntity.getRoomId());
+            quizEntity.setUserPlayCount(quizEntity.getUserPlayCount() + memberEntities.size());
             roomRepository.save(roomEntity);
+            quizRepository.save(quizEntity);
 
             List<Long> qsRelationIDList = new ArrayList<>();
             for(QuizSongRelation qsRelation : qsRelationList){
