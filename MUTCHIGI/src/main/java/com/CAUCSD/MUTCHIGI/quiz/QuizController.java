@@ -101,8 +101,11 @@ public class QuizController {
             ){
 
         QuizEntity createdQuiz = quizService.createQuiz(quizDTO);
+
         if (createdQuiz == null) {
-            return ResponseEntity.status(HttpStatus.SC_NOT_IMPLEMENTED).build();
+            return ResponseEntity.status(HttpStatus.SC_NOT_IMPLEMENTED).build(); //501
+        }else if(createdQuiz.getQuizId() == -1){
+            return ResponseEntity.status(HttpStatus.SC_METHOD_NOT_ALLOWED).build(); // 405
         }
         return ResponseEntity.status(HttpStatus.SC_CREATED).body(createdQuiz.getQuizId());
     }
@@ -160,4 +163,21 @@ public class QuizController {
     ){
         return ResponseEntity.ok(quizService.getHintStateByHintId(quizId));
     }
+
+    @GetMapping("/notReadyQuizList")
+    @Operation(summary = "아직 업로드 되지 않은 자신의 Quiz의 간단한 정보를 얻는 API")
+    public ResponseEntity<List<NotReadyQuizDTO>> getNotReadyQuizList(){
+        return ResponseEntity.ok(quizService.getNotReadyQuiz());
+    }
+
+    @DeleteMapping("/deleteNotReadyQuiz/{quizId}")
+    @Operation(summary = "quizID로 준비되지 않은 퀴즈 삭제")
+    public ResponseEntity<Void> deleteNotReadyQuiz(
+            @PathVariable long quizId
+    ){
+        quizService.deleteNotReadyQuizInDB(quizId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

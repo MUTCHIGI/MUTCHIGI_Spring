@@ -1,9 +1,12 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
+import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 
 @Repository
@@ -23,4 +26,8 @@ public interface QuizRepository extends JpaRepository<QuizEntity, Long> {
     // typeId와 modId가 모두 null인 경우
     Page<QuizEntity> findByQuizNameContainingAndReadyToPlayTrue(
             String quizTitle, Pageable pageable);
+
+    List<QuizEntity> findByUserAndReadyToPlayFalse(UserEntity userEntity);
+
+
 }

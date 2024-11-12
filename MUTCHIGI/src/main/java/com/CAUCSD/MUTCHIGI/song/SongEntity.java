@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Setter
@@ -29,7 +30,7 @@ public class SongEntity {
 
     private boolean demucsCompleted;
 
-    private LocalDate convertOrderDate;
+    private LocalDateTime convertOrderDate;
 
     private String messageId;
 

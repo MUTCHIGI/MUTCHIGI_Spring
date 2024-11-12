@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -100,7 +102,20 @@ public class QuizService {
     }
 
     public QuizEntity createQuiz(QuizDTO quizDTO){
+        UserEntity user = userRepository.findById(quizDTO.getUserId()).orElse(null);
+
+        if(user == null){
+            throw new IllegalArgumentException("User not found" + quizDTO.getUserId());
+        }
+
         QuizEntity quizEntity = new QuizEntity();
+
+        List<QuizEntity> quizEntities = quizRepository.findByUserAndReadyToPlayFalse(user);
+        if(quizEntities.size() >= 3){
+            quizEntity.setQuizId(-1);
+            return quizEntity; //완성되지 않은 퀴즈는 3개까지만 만들 수 있습니다.
+        }
+
         //System.out.println("여기에 문제가 발생한건가 이름 : "+ quizDTO.getQuizName());
         LocalTime songPlayTime = LocalTime.of(
                 quizDTO.getHour(),
@@ -126,12 +141,6 @@ public class QuizService {
         quizEntity.setUseDisAlg(quizDTO.isUseDisAlg());
         quizEntity.setInstrumentId(quizDTO.getInstrumentId());
         quizEntity.setReadyToPlay(false);
-
-        UserEntity user = userRepository.findById(quizDTO.getUserId()).orElse(null);
-
-        if(user == null){
-            throw new IllegalArgumentException("User not found" + quizDTO.getUserId());
-        }
 
         quizEntity.setUser(user);
 
@@ -213,6 +222,29 @@ public class QuizService {
             getHintStateDTOList.add(getHintStateDTO);
         }
         return getHintStateDTOList;
+    }
+
+    public List<NotReadyQuizDTO> getNotReadyQuiz(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity userEntity = userRepository.findByEmail(email);
+
+        List<NotReadyQuizDTO> notReadyQuizDTOList = new ArrayList<>();
+        List<QuizEntity> quizEntityList = quizRepository.findByUserAndReadyToPlayFalse(userEntity);
+        for(QuizEntity quizEntity : quizEntityList){
+            NotReadyQuizDTO notReadyQuizDTO = new NotReadyQuizDTO();
+            notReadyQuizDTO.setQuizId(quizEntity.getQuizId());
+            notReadyQuizDTO.setQuizName(quizEntity.getQuizName());
+            notReadyQuizDTO.setSongCount(quizEntity.getSongCount());
+            notReadyQuizDTO.setImageFileName(quizEntity.getThumbnailURL());
+            notReadyQuizDTOList.add(notReadyQuizDTO);
+        }
+
+        return notReadyQuizDTOList;
+    }
+
+    public void deleteNotReadyQuizInDB(long quizId){
+        quizRepository.deleteById(quizId);
     }
 
     // 이미지 리사이즈 메서드

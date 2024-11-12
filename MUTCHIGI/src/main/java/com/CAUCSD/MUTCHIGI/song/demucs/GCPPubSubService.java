@@ -32,6 +32,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,7 +105,7 @@ public class GCPPubSubService {
                             UserEntity userEntity = userRepository.findByEmail(email);
                             songEntity.setMessageId(checkedMessageId);
                             songEntity.setUser(userEntity);
-                            songEntity.setConvertOrderDate(LocalDate.now());
+                            songEntity.setConvertOrderDate(LocalDateTime.now());
                             songRepository.save(songEntity);
                             demucsSongDTO.setMessageId(checkedMessageId);
                             return demucsSongDTO;
@@ -276,6 +277,34 @@ public class GCPPubSubService {
             qsRelationIdList.add(quizSongRelation.getQSRelationId());
         }
         return qsRelationIdList;
+    }
+
+    public DemucsConvertCountDTO getUserDemucsCount(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity userEntity = userRepository.findByEmail(email);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime last24Hours = now.minusHours(24);
+
+
+        List<SongEntity> allSongs = songRepository.findSongsByUserAndDate(userEntity, last24Hours);
+
+        System.out.println("Count : " + allSongs.size());
+
+        List<SongEntity> notCompletedSongs = allSongs.stream()
+                .filter(s -> !s.isDemucsCompleted())
+                .toList();
+
+        List<SongEntity> completedSongs = allSongs.stream()
+                .filter(SongEntity::isDemucsCompleted)
+                .toList();
+
+        DemucsConvertCountDTO dto = new DemucsConvertCountDTO();
+        dto.setOrderCount(notCompletedSongs.size() + completedSongs.size());
+        dto.setConvertedCount(completedSongs.size());
+
+        return dto;
     }
 
 

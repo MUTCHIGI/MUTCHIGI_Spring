@@ -92,4 +92,10 @@ public class GCPPubSubController {
         return ResponseEntity.ok()
                 .body(gcpPubSubService.assignSongToQuizinDB(songIds, quizId));
     }
+
+    @GetMapping("/userDemcusCount")
+    @Operation(summary = "24시간 이내에 변환요청한 노래 갯수 체크하는 API")
+    public ResponseEntity<DemucsConvertCountDTO> getUserDemcusCount(){
+        return ResponseEntity.ok(gcpPubSubService.getUserDemucsCount());
+    }
 }

@@ -2,6 +2,7 @@ package com.CAUCSD.MUTCHIGI.song;
 
 import com.CAUCSD.MUTCHIGI.quiz.QuizRepository;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
+import com.CAUCSD.MUTCHIGI.song.demucs.DemucsConvertCountDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -161,6 +162,8 @@ public class SongController {
     ){
         return ResponseEntity.ok(songService.getAnswerFromDBwithGPT(qsRelationId));
     }
+
+
 
 
 }
