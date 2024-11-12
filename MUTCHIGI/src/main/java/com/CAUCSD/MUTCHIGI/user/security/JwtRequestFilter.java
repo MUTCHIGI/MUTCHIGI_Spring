@@ -17,9 +17,9 @@ import java.io.IOException;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
-    public JwtRequestFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtRequestFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }
@@ -33,12 +33,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
+        System.out.println("header" + authorizationHeader);
         String username = null;
         String jwtToken = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwtToken = authorizationHeader.substring(7);
             username = jwtUtil.extractUsername(jwtToken);
+            System.out.println("Bearer시작 username: " + username + ", jwtToken: " + jwtToken);
         }
 
         if (username!=null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -47,11 +49,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 var authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                System.out.println("JWT가 처리되고 있습니다.");
             }else{
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid username or password");
                 return;
             }
         }
+        System.out.println("response : " + response + "jwtToken : " + jwtToken + "username : " + username + ", jwtToken : " + jwtToken);
         filterChain.doFilter(request, response);
     }
 }
