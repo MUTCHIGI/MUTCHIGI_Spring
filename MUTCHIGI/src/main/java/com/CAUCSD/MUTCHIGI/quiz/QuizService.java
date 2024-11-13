@@ -218,7 +218,7 @@ public class QuizService {
             GetHintStateDTO getHintStateDTO = new GetHintStateDTO();
             getHintStateDTO.setHintType(hintStateEntity.getHintType());
             getHintStateDTO.setHintTime(hintStateEntity.getHintTime());
-            getHintStateDTO.setHintStateId(getHintStateDTO.getHintStateId());
+            getHintStateDTO.setHintStateId(hintStateEntity.getHintStateId());
             getHintStateDTOList.add(getHintStateDTO);
         }
         return getHintStateDTOList;
