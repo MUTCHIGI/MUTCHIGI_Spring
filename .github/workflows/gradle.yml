@@ -31,8 +31,9 @@ jobs:
 
     # 2. Spring Boot 애플리케이션 빌드
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+      uses: gradle/gradle-build-action@v1
       with:
+        gradle-version: '8.11'
         arguments: clean bootJar
 
     # 3. Docker 이미지 빌드
