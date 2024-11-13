@@ -13,5 +13,6 @@ public class UserDTO {
     private String name;
     private String profileImageURL;
     private long providerId;
+    private MemberRole role;
 
 }
