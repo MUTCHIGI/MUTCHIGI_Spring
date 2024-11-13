@@ -33,9 +33,9 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@v1
       with:
+        build-root-directory: MUTCHIGI
         gradle-version: '8.11'
         arguments: clean bootJar
-        build-file: MTCHIGI/build.gradle
 
     # 3. Docker 이미지 빌드
     - name: docker image build
