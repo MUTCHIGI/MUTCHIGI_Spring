@@ -221,7 +221,7 @@ public class MusicChatService {
             sendNextSongDTO.setQsRelationId(qsRelationID);
             sendNextSongDTO.setOriginalSongURL(quizSongRelation.getSongEntity().getPlayURL());
 
-            LocalTime startTime = quizSongRelation.getSongEntity().getSongTime();
+            LocalTime startTime = quizSongRelation.getStartTime();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             String timeStamp = startTime.format(formatter);
 
