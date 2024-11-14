@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+#.env및 설정파일 추가
+.env
+**/src/main/resources/capston-test-436509-894d3fd06aa1.json

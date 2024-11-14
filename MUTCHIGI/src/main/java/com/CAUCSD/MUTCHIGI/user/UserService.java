@@ -3,6 +3,7 @@ package com.CAUCSD.MUTCHIGI.user;
 import com.CAUCSD.MUTCHIGI.user.provider.Provider;
 import com.CAUCSD.MUTCHIGI.user.provider.ProviderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +14,13 @@ public class UserService {
 
     @Autowired
     private ProviderRepository providerRepository;
+
+    public String getHost_url() {
+        return host_url;
+    }
+
+    @Value("${front.host.url.testSet}")
+    private String host_url;
 
     public UserEntity registerUser(UserDTO userDTO) {
         UserEntity userEntity = userRepository.findByEmail(userDTO.getEmail());
