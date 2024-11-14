@@ -506,6 +506,11 @@ public class SongService {
                 singerSongRelation.setSinger(singerEntity);
                 singerSongRelationRepository.save(singerSongRelation);
             }
+            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+            if(quizEntity != null){
+                quizEntity.setSongCount(quizEntity.getSongCount() + 1);
+                quizRepository.save(quizEntity);
+            }
 
             return getYoutubeSongDTO(songEntity, singerEntity, quizSongRelation);
 
