@@ -6,12 +6,10 @@ import com.CAUCSD.MUTCHIGI.quizSong.answer.*;
 import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
-import com.CAUCSD.MUTCHIGI.song.demucs.DemucsConvertCountDTO;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelationRepository;
-import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,13 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class SongService {
@@ -505,6 +498,11 @@ public class SongService {
                 singerSongRelation.setSong(songEntity);
                 singerSongRelation.setSinger(singerEntity);
                 singerSongRelationRepository.save(singerSongRelation);
+            }
+            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+            if(quizEntity != null){
+                quizEntity.setSongCount(quizEntity.getSongCount() + 1);
+                quizRepository.save(quizEntity);
             }
 
             return getYoutubeSongDTO(songEntity, singerEntity, quizSongRelation);

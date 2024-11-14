@@ -1,20 +1,19 @@
 package com.CAUCSD.MUTCHIGI.user.security;
 
 import com.CAUCSD.MUTCHIGI.user.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.http.client.RedirectStrategy;
+import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -67,7 +66,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         System.out.println("name : " + newUserDTO.getName());
 
         // 리다이렉트할 URL 설정
-        String redirectUrl = "http://localhost:5173/home?token=" + token;
+        String redirectUrl = userService.getHost_url() + "/home?token=" + token;
+        System.out.println("HOST_URL : "+ redirectUrl);
 
         // 리다이렉트
         response.sendRedirect(redirectUrl);

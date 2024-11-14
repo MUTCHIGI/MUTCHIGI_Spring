@@ -22,8 +22,6 @@ import java.util.Map;
 @RequestMapping("/authTest")
 public class UserController {
 
-    private static final String CLIENT_ID = "111904407916-7npkvko09qv63g09jqtcdnbbikp3ki7b.apps.googleusercontent.com";
-
     @Autowired
     private UserService userService;
 
