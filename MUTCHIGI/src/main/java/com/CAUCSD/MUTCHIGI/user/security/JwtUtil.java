@@ -9,20 +9,33 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
-    private final Key SECRET_KEY = Keys.hmacShaKeyFor("sadfsadfasgadfsgfdsgsdgsdfsdafdsfgdasfgdsffgfsdgsfdgdsgsdfgdsgsdfgsdfgsdg".getBytes());
+
+    @Value("${example.testkey}")
+    private String jwtKey;
+
+    private Key SECRET_KEY;
+
+    @PostConstruct
+    public void init() {
+        // jwtKey가 주입된 후에 SECRET_KEY 초기화
+        SECRET_KEY = Keys.hmacShaKeyFor(jwtKey.getBytes());
+        System.out.println("SECRET_KEY IS : " + jwtKey);
+    }
 
     // JWT 생성
     public String generateToken(String username, MemberRole memberRole) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", memberRole.name()); // 단일 역할을 리스트로 감싸기
 
-        System.out.println("토큰 생성중");
+        System.out.println("토큰 생성중" + Arrays.toString(SECRET_KEY.getEncoded()));
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
