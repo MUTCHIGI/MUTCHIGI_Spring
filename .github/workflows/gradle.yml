@@ -69,8 +69,8 @@ jobs:
           run: | 
             sudo docker run --name mutchigi --rm -d \
               -p 8080:8080 \
-              -v /home/ubuntu/envfile:/app/.env \
-              -v /home/ubuntu/envfile:/app/resources/capston-test-436509-894d3fd06aa1.json \
+              -v /home/ubuntu/envfile/.env:/app/.env \
+              -v /home/ubuntu/envfile/capston-test-436509-894d3fd06aa1.json:/app/resources/capston-test-436509-894d3fd06aa1.json \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi
   
         # 4. 미사용 이미지를 정리합니다
