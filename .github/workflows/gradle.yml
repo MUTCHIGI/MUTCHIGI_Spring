@@ -68,7 +68,7 @@ jobs:
         - name: docker run new container
           run: | 
             sudo docker run --name mutchigi --rm -d \
-              -p 443:443 \
+              -p 8443:8443 \
               -v /home/ubuntu/envfile/.env:/app/.env \
               -v /home/ubuntu/envfile/capston-test-436509-894d3fd06aa1.json:/app/resources/capston-test-436509-894d3fd06aa1.json \
               -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
