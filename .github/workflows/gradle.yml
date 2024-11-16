@@ -68,10 +68,10 @@ jobs:
         - name: docker run new container
           run: | 
             sudo docker run --name mutchigi --rm -d \
-              -p 8080:8080 \
-              -v /home/ubuntu/envfile/.env:/app/.env \
+              -p 8443:8443 \
+              --env-file /home/ubuntu/envfile/.env \
               -v /home/ubuntu/envfile/capston-test-436509-894d3fd06aa1.json:/app/resources/capston-test-436509-894d3fd06aa1.json \
-              -v /home/ubuntu/envfile/bootsecurity.p12:/app/resources/bootsecurity.p12 \
+              -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi
   
         # 4. 미사용 이미지를 정리합니다
