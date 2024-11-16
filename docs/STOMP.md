@@ -110,7 +110,7 @@
 ``` 구독 : ('/topic/song/' + chatRoomId)
 {
   qsRelationId : (long),
-  songURL : (String), << 악기 분리도 동일하게 URL로 스트리밍 형태로 변환하여 제공할 예정이다.
+  songURL : (String), << 악기 분리는 빈 스트링으로 오고 그걸 이용해 REST API로 /GCP/DemucsSong/play/inRoom 으로 GET 요청을 보내면된다.
   originalSongURL : (String), << 악기 분리의 경우 YoutubeURL이 포함되고 기본인 경우 SongURL과 동일한 URL이 담긴다(Youtube)
   timeStamp : 00:00:00(String) << 노래 시작 시간이다.
 }
