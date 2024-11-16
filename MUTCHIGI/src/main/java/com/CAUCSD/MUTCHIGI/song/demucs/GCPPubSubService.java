@@ -279,6 +279,9 @@ public class GCPPubSubService {
         }
         List<Long> qsRelationIdList = new ArrayList<>();
         for (SongEntity songEntity : songEntities) {
+            if(!quizSongRelationRepository.findBySongEntity_SongId(songEntity.getSongId()).isEmpty()){
+                continue;
+            }
             QuizSongRelation quizSongRelation = new QuizSongRelation();
             quizSongRelation.setQuizEntity(quizEntity);
             quizSongRelation.setSongEntity(songEntity);
