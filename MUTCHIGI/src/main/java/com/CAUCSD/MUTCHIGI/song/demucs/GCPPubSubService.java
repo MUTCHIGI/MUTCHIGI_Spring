@@ -190,7 +190,7 @@ public class GCPPubSubService {
             return null;
         }
         int instrumentId = quizSongRelation.getQuizEntity().getInstrumentId();
-        long songId = quizSongRelation.getQuizEntity().getQuizId();
+        long songId = quizSongRelation.getSongEntity().getSongId();
 
         String intrumentName ="";
         switch (instrumentId){
@@ -285,6 +285,8 @@ public class GCPPubSubService {
             quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
             qsRelationIdList.add(quizSongRelation.getQSRelationId());
         }
+        quizEntity.setSongCount(songEntities.size());
+        quizRepository.save(quizEntity);
         return qsRelationIdList;
     }
 
