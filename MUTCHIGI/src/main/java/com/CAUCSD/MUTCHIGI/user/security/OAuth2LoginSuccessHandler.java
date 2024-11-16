@@ -67,7 +67,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         System.out.println("name : " + newUserDTO.getName());
 
         // 리다이렉트할 URL 설정
-        String redirectUrl = "http://localhost:5173/home?token=" + token;
+        String redirectUrl = "http://localhost:5173/?token=" + token;
 
         // 리다이렉트
         response.sendRedirect(redirectUrl);
