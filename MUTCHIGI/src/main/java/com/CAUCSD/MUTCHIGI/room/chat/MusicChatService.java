@@ -194,7 +194,7 @@ public class MusicChatService {
 
             List<Long> qsRelationIDList = new ArrayList<>();
             for(QuizSongRelation qsRelation : qsRelationList){
-                qsRelationIDList.add(qsRelation.getSongEntity().getSongId());
+                qsRelationIDList.add(qsRelation.getQSRelationId());
             }
             simpAttributes.setAttribute("qsRelationList", qsRelationIDList);
             System.out.println("songIndex 0 : " + qsRelationIDList);
