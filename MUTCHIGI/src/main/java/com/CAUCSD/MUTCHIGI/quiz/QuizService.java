@@ -7,6 +7,7 @@ import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateRepository;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,8 @@ public class QuizService {
     private UserRepository userRepository;
 
     // 임시로 상대경로로 폴더 위치 지정
-    private final String thumbnailDir = "C:\\thumbnailURL";
+    @Value("${thumbnail.dir}")
+    private String thumbnailDir;
 
     public List<Long> getQuizIDList(int page, int offset, int typeId, int modId, QuizSort sort, String quizTitle){
         PageRequest pageRequest = switch (sort) {

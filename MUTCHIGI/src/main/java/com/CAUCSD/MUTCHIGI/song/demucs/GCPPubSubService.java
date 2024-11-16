@@ -46,6 +46,12 @@ import java.util.regex.Pattern;
 @Service
 public class GCPPubSubService {
 
+    @Value("${demucs.dir}")
+    private String demucsLocalDir;
+
+    @Value("${gcp.download.url}")
+    private String baseDownloadUrl;
+
     @Autowired
     private PubSubTemplate pubSubTemplate;
 
@@ -166,7 +172,8 @@ public class GCPPubSubService {
             default:
                 throw new IllegalArgumentException("Invalid instrumentId: " + instrumentId);
         }
-        String filePath = "C:\\demucsFile\\" + songId + "_" + intrumentName + ".mp3";
+        String filePath = demucsLocalDir + songId + "_" + intrumentName + ".mp3";
+        System.out.println("filePath는 : " + filePath);
         File file = new File(filePath);
 
         // 파일이 존재하는지 체크
@@ -202,7 +209,9 @@ public class GCPPubSubService {
             default:
                 throw new IllegalArgumentException("Invalid instrumentId: " + instrumentId);
         }
-        String filePath = "C:\\demucsFile\\" + songId + "_" + intrumentName + ".mp3";
+        String filePath = demucsLocalDir + songId + "_" + intrumentName + ".mp3";
+
+        System.out.println("filePath는 : " + filePath);
         File file = new File(filePath);
 
         // 파일이 존재하는지 체크
@@ -341,7 +350,7 @@ public class GCPPubSubService {
             // 다운로드 링크 추출
             Map<String, String> downloadLinks = messageData.getDownload_links();
             String songId = messageData.getSong_id();
-            String baseDownloadUrl = "http://35.216.6.4:5843";
+
 
             SongEntity songEntity = songRepository.findById(Long.parseLong(songId)).orElse(null);
             if(songEntity != null){
@@ -354,7 +363,7 @@ public class GCPPubSubService {
 
                     System.out.println("Download type: " + linkType + " | URL: " + fileUrl);
 
-                    String destinationPath = "C:/demucsFile/" + songId + "_" + linkType + ".mp3";
+                    String destinationPath = demucsLocalDir + songId + "_" + linkType + ".mp3";
                     // 파일 다운로드 함수 호출
                     downloadFile(fileUrl, destinationPath);
                     songEntity.setDemucsCompleted(true);
