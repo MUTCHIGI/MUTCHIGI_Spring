@@ -285,7 +285,7 @@ public class GCPPubSubService {
             quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
             qsRelationIdList.add(quizSongRelation.getQSRelationId());
         }
-        quizEntity.setSongCount(songEntities.size());
+        quizEntity.setSongCount(quizEntity.getSongCount() + songEntities.size());
         quizRepository.save(quizEntity);
         return qsRelationIdList;
     }
