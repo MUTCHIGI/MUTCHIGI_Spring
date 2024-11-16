@@ -171,25 +171,26 @@ public class MusicChatService {
             userIdLong = Long.parseLong(String.valueOf(userId));
         }
 
+        System.out.println("여기 getNextSong userId : " + userIdLong);
+
         //즉 처음 시작하는 거면 qsRelationList 세션에 저장
         if(songIndex == 0){
             MemberEntity orderMember = memberRepository.findByRoomEntity_RoomIdAndUserEntity_UserId(chatRoomId, userIdLong).orElse(null);
-            if(orderMember.getRoomAuthority() == RoomAuthority.SECONDARY){
-               return null;
-            }
+
             RoomEntity roomEntity = roomRepository.findById(chatRoomId).orElse(null);
             if(roomEntity == null){
                 return null;
             }
+            if(orderMember.getRoomAuthority() == RoomAuthority.FIRST){
+                roomEntity.setParticipateAllowed(false);
+                QuizEntity quizEntity = roomEntity.getQuiz();
+                List<MemberEntity> memberEntities = memberRepository.findByRoomEntity_RoomId(roomEntity.getRoomId());
+                quizEntity.setUserPlayCount(quizEntity.getUserPlayCount() + memberEntities.size());
+                roomRepository.save(roomEntity);
+                quizRepository.save(quizEntity);
+            }
             List<QuizSongRelation> qsRelationList = quizSongRelationReopository
                     .findByQuizEntity_QuizId(roomEntity.getQuiz().getQuizId());
-
-            roomEntity.setParticipateAllowed(false);
-            QuizEntity quizEntity = roomEntity.getQuiz();
-            List<MemberEntity> memberEntities = memberRepository.findByRoomEntity_RoomId(roomEntity.getRoomId());
-            quizEntity.setUserPlayCount(quizEntity.getUserPlayCount() + memberEntities.size());
-            roomRepository.save(roomEntity);
-            quizRepository.save(quizEntity);
 
             List<Long> qsRelationIDList = new ArrayList<>();
             for(QuizSongRelation qsRelation : qsRelationList){
@@ -234,6 +235,7 @@ public class MusicChatService {
                 answerList.add(answerEntity.getAnswer());
             }
             simpAttributes.setAttribute("answerList", answerList);
+            System.out.println("UserID : " + userIdLong);
             System.out.println("songIndex Next : " + answerList);
 
 
