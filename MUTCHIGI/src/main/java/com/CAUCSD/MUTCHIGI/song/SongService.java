@@ -278,7 +278,9 @@ public class SongService {
             hintRepository.deleteAll(deleteHintList);
             quizSongRelationRepository.deleteById(qsRelationId);
         }
-
+        QuizEntity quizEntity = deleteQSRelation.getQuizEntity();
+        quizEntity.setSongCount(quizEntity.getSongCount() - 1);
+        quizRepository.save(quizEntity);
 
         // 삭제 후 확인
         if (!quizSongRelationRepository.existsById(qsRelationId)) {
