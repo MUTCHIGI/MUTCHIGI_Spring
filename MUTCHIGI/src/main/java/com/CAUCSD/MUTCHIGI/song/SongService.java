@@ -149,7 +149,7 @@ public class SongService {
             return null;
         }
         if(quizEntity.getTypeId() == 2){
-            videoIds = videoIds.subList(0,10);
+            if(videoIds.size() >= 10) videoIds = videoIds.subList(0, 10);
         }
 
         for(String videoId : videoIds){
