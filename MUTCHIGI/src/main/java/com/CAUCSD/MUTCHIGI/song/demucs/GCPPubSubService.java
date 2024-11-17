@@ -6,6 +6,7 @@ import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
 import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
 import com.CAUCSD.MUTCHIGI.song.SongEntity;
 import com.CAUCSD.MUTCHIGI.song.SongRepository;
+import com.CAUCSD.MUTCHIGI.song.SongService;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerEntity;
 import com.CAUCSD.MUTCHIGI.song.singer.SingerRepository;
 import com.CAUCSD.MUTCHIGI.song.singer.relation.SingerSongRelation;
@@ -77,6 +78,8 @@ public class GCPPubSubService {
     private String youtubeAPIKey;
 
     private String baseYoutubeURL = "https://www.googleapis.com/youtube/v3/videos";
+    @Autowired
+    private SongService songService;
 
     public DemucsSongDTO publicMessage(String youtubeURL){
         String topicPub = "demucs";
@@ -279,16 +282,17 @@ public class GCPPubSubService {
         }
         List<Long> qsRelationIdList = new ArrayList<>();
         for (SongEntity songEntity : songEntities) {
-            if(!quizSongRelationRepository.findBySongEntity_SongId(songEntity.getSongId()).isEmpty()){
-                continue;
+            if(quizSongRelationRepository.findBySongEntity(songEntity).isEmpty()) { //퀴즈에 없는 노래만 추가
+                System.out.println("노래명 : " + songEntity.getSongName());
+                QuizSongRelation quizSongRelation = new QuizSongRelation();
+                quizSongRelation.setQuizEntity(quizEntity);
+                quizSongRelation.setSongEntity(songEntity);
+                quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
+                qsRelationIdList.add(quizSongRelation.getQSRelationId());
             }
-            QuizSongRelation quizSongRelation = new QuizSongRelation();
-            quizSongRelation.setQuizEntity(quizEntity);
-            quizSongRelation.setSongEntity(songEntity);
-            quizSongRelation = quizSongRelationRepository.save(quizSongRelation);
-            qsRelationIdList.add(quizSongRelation.getQSRelationId());
+
         }
-        quizEntity.setSongCount(quizEntity.getSongCount() + songEntities.size());
+        quizEntity.setSongCount(quizEntity.getSongCount() + qsRelationIdList.size());
         quizRepository.save(quizEntity);
         return qsRelationIdList;
     }
