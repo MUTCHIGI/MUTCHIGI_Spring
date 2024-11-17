@@ -356,7 +356,7 @@ public class GCPPubSubService {
 
         DemucsQuizConvertedListDTO dto = new DemucsQuizConvertedListDTO();
         for (QuizSongRelation quizSongRelation : quizSongRelationList) {
-            if(quizSongRelation.getSongEntity().isDemucsCompleted()){ // 포함된게 변환안됬으면
+            if(!quizSongRelation.getSongEntity().isDemucsCompleted()){ // 포함된게 변환안됬으면
                 dto.notConvertedQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
             }
             dto.AllQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
