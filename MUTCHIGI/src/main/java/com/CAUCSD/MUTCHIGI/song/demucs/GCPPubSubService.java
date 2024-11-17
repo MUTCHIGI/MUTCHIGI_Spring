@@ -282,8 +282,9 @@ public class GCPPubSubService {
         }
         List<Long> qsRelationIdList = new ArrayList<>();
         for (SongEntity songEntity : songEntities) {
-            if(quizSongRelationRepository.findBySongEntity(songEntity).isEmpty()) { //퀴즈에 없는 노래만 추가
-                System.out.println("노래명 : " + songEntity.getSongName());
+            System.out.println("노래명 : " + songEntity.getSongName());
+            if(quizSongRelationRepository.findByQuizEntity_QuizIdAndSongEntity_SongId(quizId, songEntity.getSongId()) == null) { //퀴즈에 없는 노래만 추가
+                System.out.println("이후 이프문 통과중");
                 QuizSongRelation quizSongRelation = new QuizSongRelation();
                 quizSongRelation.setQuizEntity(quizEntity);
                 quizSongRelation.setSongEntity(songEntity);
