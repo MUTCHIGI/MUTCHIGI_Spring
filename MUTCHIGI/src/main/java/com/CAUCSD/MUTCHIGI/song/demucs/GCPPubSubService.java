@@ -349,6 +349,21 @@ public class GCPPubSubService {
         }
     }
 
+    public DemucsQuizConvertedListDTO getQuizDemucsCountInDB(long quiz){
+        List<QuizSongRelation> quizSongRelationList = quizSongRelationRepository.findByQuizEntity_QuizId(quiz);
+
+        System.out.println("QS갯수 : " + quizSongRelationList.size());
+
+        DemucsQuizConvertedListDTO dto = new DemucsQuizConvertedListDTO();
+        for (QuizSongRelation quizSongRelation : quizSongRelationList) {
+            if(quizSongRelation.getSongEntity().isDemucsCompleted()){ // 포함된게 변환안됬으면
+                dto.notConvertedQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
+            }
+            dto.AllQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
+        }
+        return dto;
+    }
+
     // 메시지에서 download link 추출 후 다운로드
     private void downloadFilesFromMessage(String payload) {
 
