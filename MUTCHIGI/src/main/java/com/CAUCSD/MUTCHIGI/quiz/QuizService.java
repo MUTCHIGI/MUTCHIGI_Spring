@@ -165,7 +165,9 @@ public class QuizService {
         File parentDir = thumbnailFile.getParentFile();
         if(!parentDir.exists()){
             //System.out.println("내부 메서드 진입 테스트 if문" );
-            if(!parentDir.mkdir()){
+            parentDir.mkdirs();
+            System.out.println("Directory created: " + parentDir.getAbsolutePath());
+            if(!parentDir.exists()){
                 throw new IOException("디렉토리를 생성할 수 없습니다." + parentDir.getAbsolutePath());
             }
         }
