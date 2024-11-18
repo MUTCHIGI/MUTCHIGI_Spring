@@ -331,6 +331,8 @@ public class GCPPubSubService {
     private void downloadFile(String fileUrl, String destinationPath) throws IOException {
         URL url = new URL(fileUrl);
         // 경로가 없다면 폴더 생성
+
+        System.out.println("데스티네이션 패스 : " + destinationPath);
         File destinationFile = new File(destinationPath);
         File parentDir = destinationFile.getParentFile();
         if (!parentDir.exists()) {
