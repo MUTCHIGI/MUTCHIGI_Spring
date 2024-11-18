@@ -98,4 +98,12 @@ public class GCPPubSubController {
     public ResponseEntity<DemucsConvertCountDTO> getUserDemcusCount(){
         return ResponseEntity.ok(gcpPubSubService.getUserDemucsCount());
     }
+
+    @GetMapping("/quiz/DemucsCount")
+    @Operation(summary = "해당 퀴즈에 매핑된 노래가 변환 완료되었는지 갯수로 체크하는 API")
+    public ResponseEntity<DemucsQuizConvertedListDTO> getQuizDemcusCount(
+            @RequestParam long quizId
+    ){
+        return ResponseEntity.ok(gcpPubSubService.getQuizDemucsCountInDB(quizId));
+    }
 }

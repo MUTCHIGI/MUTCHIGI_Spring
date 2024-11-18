@@ -143,6 +143,15 @@ public class SongService {
         }while (true);
 
         List<YoutubeSongDTO> songs = new ArrayList<>();
+
+        QuizEntity quizEntity = quizRepository.findById(myPlayListQuizDTO.getQuizId()).orElse(null);
+        if (quizEntity == null) {
+            return null;
+        }
+        if(quizEntity.getTypeId() == 2){
+            if(videoIds.size() >= 10) videoIds = videoIds.subList(0, 10);
+        }
+
         for(String videoId : videoIds){
             String apiURL = String.format("%s?id=%s&key=%s&part=snippet,contentDetails", baseYoutubeURL, videoId, youtubeAPIKey);
             RestTemplate restTemplate = new RestTemplate();
@@ -453,6 +462,7 @@ public class SongService {
             SingerEntity singerEntity;
             String singerName = itemNode.path("snippet").path("channelTitle").asText();
             SingerEntity existSinger = singerRepository.findBySingerName(singerName);
+            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
 
             if(existSinger!=null) {
                 singerEntity = existSinger;
@@ -501,7 +511,7 @@ public class SongService {
                 singerSongRelation.setSinger(singerEntity);
                 singerSongRelationRepository.save(singerSongRelation);
             }
-            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+
             if(quizEntity != null){
                 quizEntity.setSongCount(quizEntity.getSongCount() + 1);
                 quizRepository.save(quizEntity);
@@ -524,7 +534,9 @@ public class SongService {
         youtubeSongDTO.setPlayURL(songEntity.getPlayURL());
         youtubeSongDTO.setThumbnailURL(songEntity.getThumbnailURL());
         youtubeSongDTO.setSongTime(songEntity.getSongTime());
-        youtubeSongDTO.setQuizSongRelationID(quizSongRelation.getQSRelationId());
+        if(quizSongRelation != null){
+            youtubeSongDTO.setQuizSongRelationID(quizSongRelation.getQSRelationId());
+        }
         return youtubeSongDTO;
     }
 

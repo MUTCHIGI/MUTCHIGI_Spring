@@ -331,6 +331,8 @@ public class GCPPubSubService {
     private void downloadFile(String fileUrl, String destinationPath) throws IOException {
         URL url = new URL(fileUrl);
         // 경로가 없다면 폴더 생성
+
+        System.out.println("데스티네이션 패스 : " + destinationPath);
         File destinationFile = new File(destinationPath);
         File parentDir = destinationFile.getParentFile();
         if (!parentDir.exists()) {
@@ -347,6 +349,21 @@ public class GCPPubSubService {
             }
             System.out.println("File downloaded to: " + destinationPath);
         }
+    }
+
+    public DemucsQuizConvertedListDTO getQuizDemucsCountInDB(long quiz){
+        List<QuizSongRelation> quizSongRelationList = quizSongRelationRepository.findByQuizEntity_QuizId(quiz);
+
+        System.out.println("QS갯수 : " + quizSongRelationList.size());
+
+        DemucsQuizConvertedListDTO dto = new DemucsQuizConvertedListDTO();
+        for (QuizSongRelation quizSongRelation : quizSongRelationList) {
+            if(!quizSongRelation.getSongEntity().isDemucsCompleted()){ // 포함된게 변환안됬으면
+                dto.notConvertedQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
+            }
+            dto.AllQsRelationIDInQuizList.add(quizSongRelation.getQSRelationId());
+        }
+        return dto;
     }
 
     // 메시지에서 download link 추출 후 다운로드

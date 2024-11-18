@@ -181,7 +181,7 @@ public class QuizService {
             }
         }
 
-
+        System.out.println("썸네일 파일 : " + thumbnailFile.getAbsolutePath());
         //System.out.println("내부 메서드 진입 테스트" + parentDir);
         file.transferTo(thumbnailFile);
 
