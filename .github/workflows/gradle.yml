@@ -70,6 +70,8 @@ jobs:
             sudo docker run --name mutchigi --rm -d \
               -p 8443:8443 \
               --env-file /home/ubuntu/envfile/.env \
+              -v /home/ubuntu/demucsFile:/home/ubuntu/demucsFile \
+              -v /home/ubuntu/thumbnailURL:/home/ubuntu/thumbnailURL \
               -v /home/ubuntu/envfile/capston-test-436509-894d3fd06aa1.json:/app/resources/capston-test-436509-894d3fd06aa1.json \
               -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi
