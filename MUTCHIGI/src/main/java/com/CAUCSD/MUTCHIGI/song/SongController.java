@@ -29,13 +29,17 @@ public class SongController {
     public ResponseEntity<YoutubeSongDTO> createYoutubeToQuiz(
             @RequestBody YoutubeSongRequsetDTO youtubeSongRequsetDTO
     ){
+        YoutubeSongDTO dto = songService.getYoutubeSong(
+                youtubeSongRequsetDTO.getYoutubeURL(),
+                youtubeSongRequsetDTO.getQuizId());
+
+        if(dto == null){
+            return ResponseEntity.badRequest().body(null);
+        }
 
         return ResponseEntity
                 .ok()
-                .body(songService.getYoutubeSong(
-                        youtubeSongRequsetDTO.getYoutubeURL(),
-                        youtubeSongRequsetDTO.getQuizId())
-                );
+                .body(dto);
     }
 
     @PostMapping("/youtube/myPlaylist")

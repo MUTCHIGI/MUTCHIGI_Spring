@@ -1,12 +1,14 @@
 package com.CAUCSD.MUTCHIGI.quiz;
 
-import com.CAUCSD.MUTCHIGI.quizSong.hint.GetHintStateDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateDTO;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateEntity;
-import com.CAUCSD.MUTCHIGI.quizSong.hint.HintStateRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelation;
+import com.CAUCSD.MUTCHIGI.quizSong.QuizSongRelationReopository;
+import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerEntity;
+import com.CAUCSD.MUTCHIGI.quizSong.answer.AnswerRepository;
+import com.CAUCSD.MUTCHIGI.quizSong.hint.*;
 import com.CAUCSD.MUTCHIGI.user.UserEntity;
 import com.CAUCSD.MUTCHIGI.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -41,6 +43,16 @@ public class QuizService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private QuizSongRelationReopository quizSongRelationRepository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
+
+    @Autowired
+    private HintRepository hintRepository;
+
 
     // 임시로 상대경로로 폴더 위치 지정
     @Value("${thumbnail.dir}")
@@ -248,7 +260,20 @@ public class QuizService {
     }
 
     public void deleteNotReadyQuizInDB(long quizId){
-        quizRepository.deleteById(quizId);
+        QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        if(quizEntity != null){
+            List<HintStateEntity> deleteHintStateList = hintStateRepository.findByQuizEntity(quizEntity);
+            List<QuizSongRelation> quizSongRelationList = quizSongRelationRepository.findByQuizEntity_QuizId(quizId);
+            for(QuizSongRelation quizSongRelation : quizSongRelationList){
+                List<AnswerEntity> deleteAnswerList = answerRepository.findByQuizSongRelation(quizSongRelation);
+                answerRepository.deleteAll(deleteAnswerList);
+                List<HintEntity> deleteHintList = hintRepository.findByQuizSongRelation(quizSongRelation);
+                hintRepository.deleteAll(deleteHintList);
+                quizSongRelationRepository.delete(quizSongRelation);
+            }
+
+            quizRepository.deleteById(quizId);
+        }
     }
 
     // 이미지 리사이즈 메서드
