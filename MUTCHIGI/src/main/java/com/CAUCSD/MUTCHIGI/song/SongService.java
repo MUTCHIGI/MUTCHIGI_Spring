@@ -204,9 +204,21 @@ public class SongService {
             for (int i = answerList.size(); i < answerEntityList.size(); i++) {
                 answerRepository.delete(answerEntityList.get(i)); // 삭제
             }
+            answerRepository.saveAll(answerEntityList.subList(0, answerList.size()));
+        }
+        if(answerList.size() >= answerEntityList.size()){
+            for(int i = answerEntityList.size(); i < answerList.size(); i++){
+                AnswerEntity overAnswerEntity = new AnswerEntity();
+                overAnswerEntity.setQuizSongRelation(quizSongRelation);
+                overAnswerEntity.setAnswer(answerList.get(i));
+                overAnswerEntity.setLLMUsed(false);
+                overAnswerEntity =  answerRepository.save(overAnswerEntity);
+                idList.add(overAnswerEntity.getAnswerId());
+            }
+            answerRepository.saveAll(answerEntityList.subList(0, answerEntityList.size()));
         }
 
-        answerRepository.saveAll(answerEntityList.subList(0, answerList.size()));
+
 
         return idList;
     }
@@ -501,8 +513,9 @@ public class SongService {
                 quizSongRelation.setSongEntity(songEntity);
                 quizSongRelation.setQuizEntity(quizRepository.findById(quizId).get());
                 quizSongRelationRepository.save(quizSongRelation);
+
             }else{
-                quizSongRelation = existQSRelation;
+                return null;
             }
 
             if(existSinger == null || existPlatformSong == null){
