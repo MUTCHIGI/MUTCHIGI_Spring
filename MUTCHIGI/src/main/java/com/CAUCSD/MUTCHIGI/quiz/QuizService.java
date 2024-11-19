@@ -28,6 +28,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -147,7 +148,7 @@ public class QuizService {
         quizEntity.setSongCount(0);
         quizEntity.setQuizName(quizDTO.getQuizName());
         quizEntity.setQuizDescription(quizDTO.getQuizDescription());
-        quizEntity.setReleaseDate(LocalDate.now());
+        quizEntity.setReleaseDate(LocalDateTime.now());
         quizEntity.setUserPlayCount(0);
         quizEntity.setTypeId(quizDTO.getTypeId());
         quizEntity.setModId(quizDTO.getModId());
@@ -167,6 +168,7 @@ public class QuizService {
             return null;
         }
         quizEntity.setReadyToPlay(true);
+        quizEntity.setReleaseDate(LocalDateTime.now());
         quizRepository.save(quizEntity);
         return quizEntity.getQuizId();
     }

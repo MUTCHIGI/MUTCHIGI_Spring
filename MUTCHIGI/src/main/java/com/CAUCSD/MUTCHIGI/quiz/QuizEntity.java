@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -27,7 +28,7 @@ public class QuizEntity {
     private String quizDescription;
     // 퀴즈 설명
 
-    private LocalDate releaseDate;
+    private LocalDateTime releaseDate;
     // 최종 수정 일자
 
     private long userPlayCount;
