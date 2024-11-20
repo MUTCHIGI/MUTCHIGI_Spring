@@ -91,10 +91,10 @@ public class GCPPubSubService {
 
             SongEntity songEntity = songRepository.findById(songId).orElse(null);
             if(songEntity == null){
-                return null;
+                return demucsSongDTO;
             }
             else if(songEntity.isDemucsCompleted()){
-                return null;
+                return demucsSongDTO;
             }
 
             Map<String, String> message = new HashMap<>();
@@ -117,7 +117,6 @@ public class GCPPubSubService {
                 try{
                     String checkedMessageId  = messageId.get();
                     if(checkedMessageId != null){
-                        SongEntity songEntity = songRepository.findById(songId).orElse(null);
                         if(songEntity != null){
                             UserEntity userEntity = userRepository.findByEmail(email);
                             songEntity.setMessageId(checkedMessageId);
