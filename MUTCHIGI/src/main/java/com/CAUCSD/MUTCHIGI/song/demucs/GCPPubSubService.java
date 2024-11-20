@@ -89,6 +89,14 @@ public class GCPPubSubService {
 
         if(demucsSongDTO.getSongTime().toSecondOfDay() < 6000){
 
+            SongEntity songEntity = songRepository.findById(songId).orElse(null);
+            if(songEntity == null){
+                return null;
+            }
+            else if(songEntity.isDemucsCompleted()){
+                return null;
+            }
+
             Map<String, String> message = new HashMap<>();
             message.put("youtube_url", youtubeURL);
             message.put("songId", String.valueOf(songId));
