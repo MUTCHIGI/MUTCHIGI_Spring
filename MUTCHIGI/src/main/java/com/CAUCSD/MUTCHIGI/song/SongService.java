@@ -256,21 +256,37 @@ public class SongService {
 
     public List<Long> saveHintList(List<HintDTO> hintDTOList, long qsRelationId){
         List<Long> hintIdList = new ArrayList<>();
+        List<HintEntity> hintEntities =
+                hintRepository.findByQuizSongRelation(
+                        quizSongRelationRepository.findById(
+                                qsRelationId).orElse(null));
 
-        for(HintDTO hintDTO : hintDTOList){
-            HintEntity hintEntity = new HintEntity();
-            HintStateEntity hintStateEntity = hintStateRepository.findById(hintDTO.getHintStateId()).orElse(null);
+        for(int i =0; i < hintDTOList.size(); i++){
+            HintEntity hintEntity;
+            if(hintEntities.size() <= i){ // DB에 저장된 힌트가 없으면
+                hintEntity = new HintEntity();
+            }
+            else{
+                hintEntity = hintEntities.get(i);
+            }
+            HintStateEntity hintStateEntity = hintStateRepository.findById(hintDTOList.get(i).getHintStateId()).orElse(null);
 
             LocalTime hintTime = hintStateEntity.getHintTime();
 
             hintEntity.setHintTime(hintTime);
             hintEntity.setHintType(hintStateEntity.getHintType());
-            hintEntity.setHintText(hintDTO.getHintText());
+            hintEntity.setHintText(hintDTOList.get(i).getHintText());
             hintEntity.setQuizSongRelation(quizSongRelationRepository.findById(qsRelationId).orElse(null));
             hintEntity = hintRepository.save(hintEntity);
 
             hintIdList.add(hintEntity.getHintId());
         }
+        for(HintEntity hint : hintEntities){
+            if(!hintIdList.contains(hint.getHintId())){
+                hintRepository.delete(hint);
+            }
+        }
+
         return hintIdList;
     }
 

@@ -265,6 +265,7 @@ public class QuizService {
         QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
         if(quizEntity != null){
             List<HintStateEntity> deleteHintStateList = hintStateRepository.findByQuizEntity(quizEntity);
+            hintStateRepository.deleteAll(deleteHintStateList);
             List<QuizSongRelation> quizSongRelationList = quizSongRelationRepository.findByQuizEntity_QuizId(quizId);
             for(QuizSongRelation quizSongRelation : quizSongRelationList){
                 List<AnswerEntity> deleteAnswerList = answerRepository.findByQuizSongRelation(quizSongRelation);
