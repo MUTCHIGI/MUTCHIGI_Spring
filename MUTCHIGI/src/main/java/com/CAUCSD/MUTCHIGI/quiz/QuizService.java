@@ -93,8 +93,13 @@ public class QuizService {
     }
 
     public List<QuizEntity> getQuizByIdList(List<Long> quizIdList) throws IOException {
-        List<QuizEntity> quizEntities = quizRepository.findAllById(quizIdList);
-
+        List<QuizEntity> quizEntities = new ArrayList<>();
+        for(long quizId : quizIdList){
+            QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+            if(quizEntity != null){
+                quizEntities.add(quizEntity);
+            }
+        }
         return quizEntities;
     }
 
