@@ -74,16 +74,22 @@ public class SongService {
 
     private String baseYoutubeListURL = "https://www.googleapis.com/youtube/v3/playlistItems";
 
-    private String prompt = """
-            From now on, generate a list of only 20 tuning forks each based on the English or Korean music titles I give you.\s
-            Instructions:
-             -If I give you an English title, generate 20 candidate Korean tuning for me.\s
-            -If I give you a Korean title, generate 20 English translation candidates.\s
-            -Each candidate should be as close to the standard pronunciation as possible, with no duplicates and as natural as possible.\s
-            -Number each list to separate them.\s
-            -Please arrange them in a similar order to the standard phonetic transcription.\s
-            -Prioritize cases that differ only in vowels.
-            """;
+    private String prompt =  """
+        Please return a JSON array of unique candidates based on the actual music title extracted from the YouTube music video title I provide. Follow these instructions.\s
+        # basic rule\s
+        if singer name included in front of title than exclude singer name\s
+        number of candidates is limited to 10 or less without duplicates\s
+        do not numbering to candidates\s
+        # specific rule
+        ## If the music title is in English\s
+        include the original title and both uppercase and lowercase versions, candidates of Korean transcriptions. \s
+        Each transcription should closely match standard pronunciation and feel natural, focusing on minor variations such as vowels (e.g., ㅔ & ㅐ),\s
+        ## If the music title is in Korean\s
+        include candidates with removing spacing variations between words.\s
+        ## If the music title is another languages
+        include the original title and both uppercase and lowercase versions, candidates of Korean transcriptions. \s
+        Each transcription should closely match standard pronunciation and feel natural, focusing on minor variations such as vowels (e.g., ㅔ & ㅐ),\s
+    """;
     @Autowired
     private RestTemplate getRestTemplate;
 
