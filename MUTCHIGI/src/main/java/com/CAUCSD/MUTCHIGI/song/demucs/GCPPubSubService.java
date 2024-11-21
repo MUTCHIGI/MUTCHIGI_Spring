@@ -282,13 +282,13 @@ public class GCPPubSubService {
     }
 
     public List<Long> assignSongToQuizinDB(List<Long> songIds, long quizId){
-        List<SongEntity> songEntities = songRepository.findAllById(songIds);
         QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
         if(quizEntity == null){
             return null;
         }
         List<Long> qsRelationIdList = new ArrayList<>();
-        for (SongEntity songEntity : songEntities) {
+        for (long songID : songIds) {
+            SongEntity songEntity = songRepository.findById(songID).orElse(null);
             System.out.println("노래명 : " + songEntity.getSongName());
             if(quizSongRelationRepository.findByQuizEntity_QuizIdAndSongEntity_SongId(quizId, songEntity.getSongId()) == null) { //퀴즈에 없는 노래만 추가
                 System.out.println("이후 이프문 통과중");
