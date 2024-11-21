@@ -80,6 +80,7 @@ public class SongService {
         if singer name included in front of title than exclude singer name\s
         number of candidates is limited to 10 or less without duplicates\s
         do not numbering to candidates\s
+        do not add any special sign\s
         # specific rule
         ## If the music title is in English\s
         include the original title and both uppercase and lowercase versions, candidates of Korean transcriptions. \s
