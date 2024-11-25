@@ -72,7 +72,7 @@ jobs:
               --env-file /home/ubuntu/envfile/.env \
               -v /home/ubuntu/demucsFile:/home/ubuntu/demucsFile \
               -v /home/ubuntu/thumbnailURL:/home/ubuntu/thumbnailURL \
-              -v /home/ubuntu/envfile/capston-test-436509-ca7d25492dcb.json:/app/resources/capston-test-436509-ca7d25492dcb.json \
+              -v /home/ubuntu/envfile/capston-test-436509-5ae1c05bd29d.json:/app/resources/capston-test-436509-5ae1c05bd29d.json \
               -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi
   
