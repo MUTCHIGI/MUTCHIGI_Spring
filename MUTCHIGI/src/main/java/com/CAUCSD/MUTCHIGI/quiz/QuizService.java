@@ -103,6 +103,23 @@ public class QuizService {
         return quizEntities;
     }
 
+    public QuizEntity getQuizInStored(long quizId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity userEntity = userRepository.findByEmail(email);
+
+        QuizEntity quizEntity = quizRepository.findById(quizId).orElse(null);
+        if(quizEntity != null){
+            if(quizEntity.getUser() == userEntity){
+                return quizEntity;
+            }else{
+                return null;
+            }
+        }else{
+            return null;
+        }
+    }
+
     public Resource serveImageFromLocalStorage(String filename) throws  IOException{
         Path imageStoragePath = Paths.get(thumbnailDir);
         Path filePath = imageStoragePath.resolve(filename);
@@ -167,10 +184,16 @@ public class QuizService {
         return quizRepository.save(quizEntity);
     }
 
-    public Long setQuizToReadyInDB(long QuizId){
+    public long setQuizToReadyInDB(long QuizId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity userEntity = userRepository.findByEmail(email);
+
         QuizEntity quizEntity = quizRepository.findById(QuizId).orElse(null);
         if(quizEntity == null){
-            return null;
+            return -2;
+        }else if(quizEntity.getUser() != userEntity){
+            return -1;
         }
         quizEntity.setReadyToPlay(true);
         quizEntity.setReleaseDate(LocalDateTime.now());
