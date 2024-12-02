@@ -70,6 +70,19 @@ public class QuizController {
         }
     }
 
+    @GetMapping("/Entity/restore")
+    @Operation(summary = "이어하기 혹은 쿼리문으로 조회할 때, 권한 확인")
+    public ResponseEntity<QuizEntity> getQuizEntity(
+            @RequestParam long quizId
+    ){
+        QuizEntity quizEntity = quizService.getQuizInStored(quizId);
+        if (quizEntity == null) {
+            return ResponseEntity.status(HttpStatus.SC_METHOD_NOT_ALLOWED).build();
+        }else{
+            return ResponseEntity.ok(quizEntity);
+        }
+    }
+
     @GetMapping("/images/{filename}")
     @Operation(summary = "퀴즈 썸네일 이미지를 inline으로 반환함",
     description = """
@@ -115,8 +128,16 @@ public class QuizController {
     public ResponseEntity<Long> setQuizToReady(
             @PathVariable long quizId
     ){
+        long quizReadyState = quizService.setQuizToReadyInDB(quizId);
+        if(quizReadyState == -2){
+            return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).build();
+        }else if(quizReadyState == -1){
+            return ResponseEntity.status(HttpStatus.SC_METHOD_NOT_ALLOWED).build();
+        }else{
+            return ResponseEntity.status(HttpStatus.SC_OK).body(quizReadyState);
+        }
 
-        return ResponseEntity.status(HttpStatus.SC_OK).body(quizService.setQuizToReadyInDB(quizId));
+
     }
 
     @PostMapping(value = "/createQuiz/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
