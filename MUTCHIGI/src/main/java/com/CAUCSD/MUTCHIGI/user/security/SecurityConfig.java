@@ -37,7 +37,7 @@ public class SecurityConfig{
                         .requestMatchers("/oauth2/authorization/google/**", "/oauth2/authorization/**").permitAll()
                         .requestMatchers( "/login/oauth2/code/google/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers( "/login/success").permitAll()
-                        .requsetMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers( "/auth/google/**", "/oauth2/authorization/**", "/auth/callback/**", "/api/auth/google/**").permitAll()
                         .requestMatchers( "/token", "/authTest/google").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
