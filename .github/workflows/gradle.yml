@@ -103,13 +103,13 @@ jobs:
             echo "새 컨테이너 헬스 체크 시작 (${{ steps.check_container.outputs.NEW_CONTAINER }})"
             
             # 최대 대기 시간 설정 (초)
-            MAX_WAIT=60
-            INTERVAL=5
+            MAX_WAIT=180
+            INTERVAL=10
             ELAPSED=0
             
             # 애플리케이션이 완전히 시작될 때까지 대기
             echo "애플리케이션 시작 대기 중..."
-            sleep 15
+            sleep 60
             
             # 헬스 체크 엔드포인트 확인 반복
             while [ $ELAPSED -lt $MAX_WAIT ]; do
