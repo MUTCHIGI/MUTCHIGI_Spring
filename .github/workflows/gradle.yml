@@ -58,25 +58,65 @@ jobs:
       steps:
         # 1. 최신 이미지를 풀받습니다
         - name: docker pull
-          run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mutchigi
+          run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
         
-        # 2. 기존의 컨테이너를 중지시킵니다
-        - name: docker stop container
-          run: sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
+        # 2. 현재 실행 중인 컨테이너 확인
+        - name: Check running container
+          id: check_container
+          run: |
+            CURRENT_CONTAINER=$(sudo docker ps --filter "name=mutchigi-" --format "{{.Names}}" | head -n 1)
+            echo "CURRENT_CONTAINER=$CURRENT_CONTAINER" >> $GITHUB_OUTPUT
+            
+            if [[ "$CURRENT_CONTAINER" == "mutchigi-blue" ]]; then
+              echo "NEW_CONTAINER=mutchigi-green" >> $GITHUB_OUTPUT
+              echo "NEW_PORT=8444" >> $GITHUB_OUTPUT
+            else
+              echo "NEW_CONTAINER=mutchigi-blue" >> $GITHUB_OUTPUT
+              echo "NEW_PORT=8443" >> $GITHUB_OUTPUT
+            fi
   
-        # 3. 최신 이미지를 컨테이너화하여 실행시킵니다
-        - name: docker run new container
+        # 3. 새 컨테이너 실행
+        - name: Run new container
           run: | 
-            sudo docker run --name mutchigi --rm -d \
-              -p 8443:8443 \
+            sudo docker run --name ${{ steps.check_container.outputs.NEW_CONTAINER }} --rm -d \
+              -p ${{ steps.check_container.outputs.NEW_PORT }}:8443 \
               --env-file /home/ubuntu/envfile/.env \
               -v /home/ubuntu/demucsFile:/home/ubuntu/demucsFile \
               -v /home/ubuntu/thumbnailURL:/home/ubuntu/thumbnailURL \
               -v /home/ubuntu/envfile/capston-test-436509-5ae1c05bd29d.json:/app/resources/capston-test-436509-5ae1c05bd29d.json \
               -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
-              ${{ secrets.DOCKER_USERNAME }}/mutchigi
+              ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
+              
+        # 4. 새 컨테이너 헬스 체크
+        - name: Health check for new container
+          run: |
+            sleep 10
+            
+            if ! sudo docker ps | grep -q ${{ steps.check_container.outputs.NEW_CONTAINER }}; then
+              echo "New container failed to start"
+              exit 1
+            fi
+              
+        # 5. Nginx 설정 업데이트 - upstream 변경
+        - name: Update Nginx configuration
+          run: |
+            if [[ "${{ steps.check_container.outputs.NEW_CONTAINER }}" == "mutchigi-blue" ]]; then
+              sudo sed -i 's/server localhost:8444;/server localhost:8443;/g' /etc/nginx/nginx.conf
+              sudo sed -i 's/server localhost:8443 backup;/server localhost:8444 backup;/g' /etc/nginx/nginx.conf
+            else
+              sudo sed -i 's/server localhost:8443;/server localhost:8444;/g' /etc/nginx/nginx.conf
+              sudo sed -i 's/server localhost:8444 backup;/server localhost:8443 backup;/g' /etc/nginx/nginx.conf
+            fi
+            
+            sudo nginx -t && sudo nginx -s reload
+            
+        # 6. 이전 컨테이너 종료 (있는 경우에만)
+        - name: Stop previous container
+          if: steps.check_container.outputs.CURRENT_CONTAINER != ''
+          run: |
+            sleep 5
+            sudo docker stop ${{ steps.check_container.outputs.CURRENT_CONTAINER }} || true
   
-        # 4. 미사용 이미지를 정리합니다
-        - name: delete old docker image
+        # 7. 미사용 이미지를 정리합니다
+        - name: Delete old docker image
           run: sudo docker system prune -f
-          
