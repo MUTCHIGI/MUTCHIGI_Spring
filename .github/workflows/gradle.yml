@@ -50,7 +50,7 @@ jobs:
     - name: docker Hub push
       run: docker push ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
     
-  run-docker-image-on-ec2:
+ run-docker-image-on-ec2:
       # build-docker-image (위)과정이 완료되어야 실행됩니다.
       needs: build-docker-image
       runs-on: self-hosted
@@ -70,13 +70,16 @@ jobs:
             if [[ "$CURRENT_CONTAINER" == "mutchigi-blue" ]]; then
               echo "NEW_CONTAINER=mutchigi-green" >> $GITHUB_OUTPUT
               echo "NEW_PORT=8444" >> $GITHUB_OUTPUT
+              echo "CURRENT_PORT=8443" >> $GITHUB_OUTPUT
             else
               echo "NEW_CONTAINER=mutchigi-blue" >> $GITHUB_OUTPUT
               echo "NEW_PORT=8443" >> $GITHUB_OUTPUT
+              echo "CURRENT_PORT=8444" >> $GITHUB_OUTPUT
             fi
   
         # 3. 새 컨테이너 실행
         - name: Run new container
+          id: run_container
           run: | 
             sudo docker run --name ${{ steps.check_container.outputs.NEW_CONTAINER }} --rm -d \
               -p ${{ steps.check_container.outputs.NEW_PORT }}:8443 \
@@ -86,20 +89,69 @@ jobs:
               -v /home/ubuntu/envfile/capston-test-436509-5ae1c05bd29d.json:/app/resources/capston-test-436509-5ae1c05bd29d.json \
               -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
-              
-        # 4. 새 컨테이너 헬스 체크
-        - name: Health check for new container
-          run: |
-            sleep 10
             
+            # 컨테이너 시작 확인
             if ! sudo docker ps | grep -q ${{ steps.check_container.outputs.NEW_CONTAINER }}; then
-              echo "New container failed to start"
+              echo "::error::새 컨테이너 시작 실패"
               exit 1
             fi
               
-        # 5. Nginx 설정 업데이트 - upstream 변경
+        # 4. 새 컨테이너 헬스 체크 (개선된 버전)
+        - name: Health check for new container
+          id: health_check
+          run: |
+            echo "새 컨테이너 헬스 체크 시작 (${{ steps.check_container.outputs.NEW_CONTAINER }})"
+            
+            # 최대 대기 시간 설정 (초)
+            MAX_WAIT=60
+            INTERVAL=5
+            ELAPSED=0
+            
+            # 애플리케이션이 완전히 시작될 때까지 대기
+            echo "애플리케이션 시작 대기 중..."
+            sleep 15
+            
+            # 헬스 체크 엔드포인트 확인 반복
+            while [ $ELAPSED -lt $MAX_WAIT ]; do
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${{ steps.check_container.outputs.NEW_PORT }}/actuator/health || echo "000")
+              
+              if [[ "$HTTP_STATUS" == "200" ]]; then
+                echo "헬스 체크 성공: 애플리케이션이 정상적으로 실행 중입니다."
+                break
+              fi
+              
+              echo "헬스 체크 대기 중... ($ELAPSED/$MAX_WAIT 초) - 상태 코드: $HTTP_STATUS"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
+            
+            # 최대 시간 초과 확인
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
+              echo "::error::헬스 체크 타임아웃 ($MAX_WAIT 초) - 애플리케이션이 정상적으로 시작되지 않았습니다."
+              echo "HEALTH_CHECK_FAILED=true" >> $GITHUB_OUTPUT
+              exit 1
+            else
+              echo "HEALTH_CHECK_FAILED=false" >> $GITHUB_OUTPUT
+            fi
+            
+        # 5. 롤백을 위한 오류 처리
+        - name: Rollback on failure
+          if: failure() && steps.run_container.outcome == 'success'
+          run: |
+            echo "오류가 발생했습니다. 롤백을 시작합니다..."
+            
+            # 새 컨테이너 종료
+            echo "새 컨테이너 ${{ steps.check_container.outputs.NEW_CONTAINER }} 종료 중..."
+            sudo docker stop ${{ steps.check_container.outputs.NEW_CONTAINER }} || true
+            
+            echo "롤백 완료. 기존 ${{ steps.check_container.outputs.CURRENT_CONTAINER }} 컨테이너가 계속 실행됩니다."
+            exit 1
+            
+        # 6. Nginx 설정 업데이트 (성공한 경우에만)
         - name: Update Nginx configuration
           run: |
+            echo "Nginx 설정 업데이트 중..."
+            
             if [[ "${{ steps.check_container.outputs.NEW_CONTAINER }}" == "mutchigi-blue" ]]; then
               sudo sed -i 's/server localhost:8444;/server localhost:8443;/g' /etc/nginx/nginx.conf
               sudo sed -i 's/server localhost:8443 backup;/server localhost:8444 backup;/g' /etc/nginx/nginx.conf
@@ -108,15 +160,62 @@ jobs:
               sudo sed -i 's/server localhost:8444 backup;/server localhost:8443 backup;/g' /etc/nginx/nginx.conf
             fi
             
-            sudo nginx -t && sudo nginx -s reload
+            # Nginx 설정 테스트
+            if ! sudo nginx -t; then
+              echo "::error::Nginx 설정 테스트 실패. 롤백을 시작합니다."
+              exit 1
+            fi
             
-        # 6. 이전 컨테이너 종료 (있는 경우에만)
+            # Nginx 리로드
+            sudo nginx -s reload
+            echo "Nginx 설정 업데이트 및 리로드 완료"
+            
+        # 7. 최종 헬스 체크 (Nginx 변경 후)
+        - name: Final health check after Nginx update
+          run: |
+            echo "최종 헬스 체크 시작..."
+            sleep 5  # Nginx 설정 적용 대기
+            
+            # 외부 URL을 통한 헬스 체크 (도메인 확인)
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.mutchigi.kro.kr/actuator/health || echo "000")
+            
+            if [[ "$HTTP_STATUS" != "200" ]]; then
+              echo "::error::최종 헬스 체크 실패. 상태 코드: $HTTP_STATUS"
+              echo "Nginx 설정을 원래대로 되돌립니다."
+              
+              # Nginx 설정 롤백
+              if [[ "${{ steps.check_container.outputs.NEW_CONTAINER }}" == "mutchigi-blue" ]]; then
+                sudo sed -i 's/server localhost:8443;/server localhost:8444;/g' /etc/nginx/nginx.conf
+                sudo sed -i 's/server localhost:8444 backup;/server localhost:8443 backup;/g' /etc/nginx/nginx.conf
+              else
+                sudo sed -i 's/server localhost:8444;/server localhost:8443;/g' /etc/nginx/nginx.conf
+                sudo sed -i 's/server localhost:8443 backup;/server localhost:8444 backup;/g' /etc/nginx/nginx.conf
+              fi
+              
+              sudo nginx -t && sudo nginx -s reload
+              
+              # 새 컨테이너 종료
+              sudo docker stop ${{ steps.check_container.outputs.NEW_CONTAINER }} || true
+              
+              exit 1
+            fi
+            
+            echo "최종 헬스 체크 성공. 무중단 배포가 완료되었습니다."
+            
+        # 8. 배포 상태 업데이트
+        - name: Update deployment state
+          run: |
+            echo "{\"active\": \"${{ steps.check_container.outputs.NEW_CONTAINER }}\", \"timestamp\": \"$(date '+%Y-%m-%d %H:%M:%S')\"}" | sudo tee /var/deployment-state.json
+            echo "배포 상태 업데이트: 활성 환경이 ${{ steps.check_container.outputs.NEW_CONTAINER }}로 변경됨"
+            
+        # 9. 이전 컨테이너 종료 (성공한 경우에만)
         - name: Stop previous container
           if: steps.check_container.outputs.CURRENT_CONTAINER != ''
           run: |
-            sleep 5
+            echo "이전 컨테이너 ${{ steps.check_container.outputs.CURRENT_CONTAINER }} 종료 중..."
+            sleep 10  # 트래픽이 완전히 전환될 때까지 대기
             sudo docker stop ${{ steps.check_container.outputs.CURRENT_CONTAINER }} || true
   
-        # 7. 미사용 이미지를 정리합니다
+        # 10. 미사용 이미지 정리
         - name: Delete old docker image
           run: sudo docker system prune -f
