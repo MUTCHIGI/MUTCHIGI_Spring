@@ -12,7 +12,7 @@ Frontend + AI 2 , Backend 1
 [Backend](https://github.com/MUTCHIGI/MUTCHIGI_Spring)
 
 #### 유형
-Web
+Web 
 
 
 ## Project
