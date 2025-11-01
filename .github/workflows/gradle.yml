@@ -66,13 +66,13 @@ jobs:
          
         # 1. 최신 이미지를 풀받습니다
         - name: docker pull
-          run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
+          run: docker pull ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
         
         # 2. 현재 실행 중인 컨테이너 확인
         - name: Check running container
           id: check_container
           run: |
-            CURRENT_CONTAINER=$(sudo docker ps --filter "name=mutchigi-" --format "{{.Names}}" | head -n 1)
+            CURRENT_CONTAINER=$(docker ps --filter "name=mutchigi-" --format "{{.Names}}" | head -n 1)
             echo "CURRENT_CONTAINER=$CURRENT_CONTAINER" >> $GITHUB_OUTPUT
             
             if [[ "$CURRENT_CONTAINER" == "mutchigi-blue" ]]; then
@@ -89,7 +89,7 @@ jobs:
         - name: Run new container
           id: run_container
           run: | 
-            sudo docker run --name ${{ steps.check_container.outputs.NEW_CONTAINER }} --rm -d \
+            docker run --name ${{ steps.check_container.outputs.NEW_CONTAINER }} --rm -d \
               -p ${{ steps.check_container.outputs.NEW_PORT }}:8443 \
               --env-file /home/ubuntu/envfile/.env \
               -v /home/ubuntu/demucsFile:/home/ubuntu/demucsFile \
