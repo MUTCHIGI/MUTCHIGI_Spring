@@ -15,7 +15,6 @@ Frontend + AI 2 , Backend 1
 Web
 
 
-
 ## Project
 
 ### 프로젝트 소개
