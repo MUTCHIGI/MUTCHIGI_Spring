@@ -31,7 +31,7 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'com.google.cloud:spring-cloud-gcp-starter-pubsub'
+//	implementation 'com.google.cloud:spring-cloud-gcp-starter-pubsub'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
