@@ -53,7 +53,7 @@ public class GCPPubSubService {
     @Value("${gcp.download.url}")
     private String baseDownloadUrl;
 
-    @Autowired
+    @Autowired(required = false)
     private PubSubTemplate pubSubTemplate;
 
     @Autowired
