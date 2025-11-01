@@ -184,7 +184,7 @@ jobs:
             sleep 5  # Nginx 설정 적용 대기
             
             # 외부 URL을 통한 헬스 체크 (도메인 확인)
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.mutchigi.kro.kr/actuator/health || echo "000")
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mutchigi.r-e.kr/actuator/health || echo "000")
             
             if [[ "$HTTP_STATUS" != "200" ]]; then
               echo "::error::최종 헬스 체크 실패. 상태 코드: $HTTP_STATUS"
