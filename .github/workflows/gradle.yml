@@ -94,12 +94,11 @@ jobs:
               --env-file /home/ubuntu/envfile/.env \
               -v /home/ubuntu/demucsFile:/home/ubuntu/demucsFile \
               -v /home/ubuntu/thumbnailURL:/home/ubuntu/thumbnailURL \
-              -v /home/ubuntu/envfile/capston-test-436509-5ae1c05bd29d.json:/app/resources/capston-test-436509-5ae1c05bd29d.json \
-              -v /home/ubuntu/envfile/keystore.pfx:/app/resources/keystore.pfx \
+              -v /home/ubuntu/envfile/cobalt-abacus-476904-v3-e2bd9117faac.json:/app/resources/cobalt-abacus-476904-v3-e2bd9117faac.json \
               ${{ secrets.DOCKER_USERNAME }}/mutchigi:latest
             
             # 컨테이너 시작 확인
-            if ! sudo docker ps | grep -q ${{ steps.check_container.outputs.NEW_CONTAINER }}; then
+            if ! docker ps | grep -q ${{ steps.check_container.outputs.NEW_CONTAINER }}; then
               echo "::error::새 컨테이너 시작 실패"
               exit 1
             fi
