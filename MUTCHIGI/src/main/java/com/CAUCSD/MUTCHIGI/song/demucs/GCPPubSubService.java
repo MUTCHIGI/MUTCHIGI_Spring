@@ -82,7 +82,7 @@ public class GCPPubSubService {
     private SongService songService;
 
     public DemucsSongDTO publicMessage(String youtubeURL){
-        String topicPub = "demucs";
+        String topicPub = "mutchigi-app";
 
         DemucsSongDTO demucsSongDTO =  getYoutubeSong(youtubeURL);
         long songId = demucsSongDTO.getSongId();
