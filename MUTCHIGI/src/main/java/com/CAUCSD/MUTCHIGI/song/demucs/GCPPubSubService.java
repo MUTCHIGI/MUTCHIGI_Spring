@@ -148,7 +148,7 @@ public class GCPPubSubService {
     // 메시지를 처리할 구독자 메서드
     @PostConstruct
     public void subscribeToTopic(){
-        String topicSub = "demucs-download-sub";
+        String topicSub = "demucs-done";
         System.out.println("Subscribing to topic...");
 
         // Consumer<BasicAcknowledgeablePubsubMessage>로 메시지 수신
