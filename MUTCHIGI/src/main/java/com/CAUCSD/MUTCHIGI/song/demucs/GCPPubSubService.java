@@ -326,6 +326,14 @@ public class GCPPubSubService {
                 .filter(SongEntity::isDemucsCompleted)
                 .toList();
 
+
+        if(email.equals("together298@gmail.com") || email.equals("allorak333@gmail.com") || email.equals("dlworb12345@gmail.com")){
+            DemucsConvertCountDTO dto = new DemucsConvertCountDTO();
+            dto.setConvertedCount(0);
+            dto.setOrderCount(0);
+            return dto;
+        }
+
         DemucsConvertCountDTO dto = new DemucsConvertCountDTO();
         dto.setOrderCount(notCompletedSongs.size() + completedSongs.size());
         dto.setConvertedCount(completedSongs.size());
